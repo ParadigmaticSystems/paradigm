@@ -1,0 +1,32 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2025-07-31
+
+### Added
+- Initial release of Paradigm modeling framework
+- Core data structures: `Paradigm`, `Class`, `Property`, `Package`, `PrimitiveType`, `Enumeration`
+- Graph abstraction with pluggable backends via `Paradigm.Graph` behavior
+- Map-based graph implementation (`Paradigm.Graph.MapImpl`) for in-memory operations
+- Abstraction operations for embedding/extracting paradigms to/from graph data
+- Comprehensive conformance checking with detailed error reporting
+- Transform behavior with identity transform implementation
+- Canonical metamodel definition for self-modeling
+- Complete documentation and examples
+- Full test suite
+
+### Features
+- **Abstraction**: Convert between `Paradigm` structs and `Graph.Instance` representations
+- **Conformance**: Validate graph data against paradigm definitions
+- **Transforms**: Pluggable transformation system between different paradigms
+- **Graph Backends**: Flexible graph storage with behavior-based implementations
+- **Type Safety**: Comprehensive type specifications throughout
+
+[Unreleased]: https://github.com/your-org/paradigm/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/your-org/paradigm/releases/tag/v0.1.0
