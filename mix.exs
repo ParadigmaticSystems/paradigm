@@ -4,7 +4,7 @@ defmodule Paradigm.MixProject do
   def project do
     [
       app: :paradigm,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -15,7 +15,7 @@ defmodule Paradigm.MixProject do
         extras: ["README.md"],
         logo: "assets/logo.svg",
         favicon: "assets/favicon.png",
-        nest_modules_by_prefix: [Paradigm.Conformance, Paradigm.Graph],
+        nest_modules_by_prefix: [Paradigm.Conformance, Paradigm.Graph, Paradigm.Canonical, Paradigm.Transform],
         groups_for_modules: [
           "Paradigm Data Types": [
             Paradigm,

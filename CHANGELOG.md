@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-08-11
+
+### Added
+- Filesystem support with `Canonical.Filesystem` paradigm and `Graph.FilesystemGraph` adapter
+- System model support with `Canonical.Universe` paradigm and `Transform.Propagate` transform.
+### Changed
+- Refactored Graphs to use protocols instead of behaviors.
+### Fixed
+- The MapGraph normalizes property keys to strings to avoid conformance issues.
+
 ## [0.1.0] - 2025-07-31
 
 ### Added
@@ -22,11 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full test suite
 
 ### Features
-- **Abstraction**: Convert between `Paradigm` structs and `Graph.Instance` representations
+- **Abstraction**: Convert between `Paradigm` structs and `Graph` representations
 - **Conformance**: Validate graph data against paradigm definitions
 - **Transforms**: Pluggable transformation system between different paradigms
 - **Graph Backends**: Flexible graph storage with behavior-based implementations
 - **Type Safety**: Comprehensive type specifications throughout
 
-[Unreleased]: https://github.com/your-org/paradigm/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-org/paradigm/releases/tag/v0.1.0
+[Unreleased]: https://github.com/roriholm/paradigm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/roriholm/paradigm/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/roriholm/paradigm/releases/tag/v0.1.0

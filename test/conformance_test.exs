@@ -1,7 +1,7 @@
 defmodule Paradigm.ConformanceTest do
   use ExUnit.Case
   alias Paradigm.Conformance
-  alias Paradigm.Graph.{Instance, MapImpl}
+  alias Paradigm.Graph.MapGraph
 
   describe "check_graph/2" do
     test "validates valid graph" do
@@ -23,19 +23,13 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "testProp" => "value"
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "class1", %{
+                "testProp" => "value"
+              })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "detects invalid class reference" do
@@ -43,14 +37,8 @@ defmodule Paradigm.ConformanceTest do
         classes: %{}
       }
 
-      graph = %{
-        "node1" => %{
-          class: "invalid_class",
-          data: %{}
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "invalid_class", %{})
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -62,7 +50,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "validates inherited properties from superclass" do
@@ -95,32 +83,20 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "child_class",
-          data: %{
-            "parentProp" => "parent_value",
-            "childProp" => "child_value"
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "child_class", %{
+                "parentProp" => "parent_value",
+                "childProp" => "child_value"
+              })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
 
       # Missing inherited property
-      invalid_graph = %{
-        "node1" => %{
-          class: "child_class",
-          data: %{
-            "childProp" => "child_value"
-          }
-        }
-      }
-
-      invalid_instance = %Instance{impl: MapImpl, data: invalid_graph}
+      invalid_graph = MapGraph.new()
+                      |> Paradigm.Graph.insert_node("node1", "child_class", %{
+                        "childProp" => "child_value"
+                      })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -132,7 +108,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, invalid_instance)
+               Conformance.check_graph(paradigm, invalid_graph)
     end
 
     test "validates property references to superclass type" do
@@ -166,20 +142,11 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "cow",
-          data: %{}
-        },
-        "node2" => %{
-          class: "garage",
-          data: %{
-            "vehicleRef" => "node1"
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "cow", %{})
+              |> Paradigm.Graph.insert_node("node2", "garage", %{
+                "vehicleRef" => "node1"
+              })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -190,7 +157,7 @@ defmodule Paradigm.ConformanceTest do
                    node_id: "node2"
                  }
                ]
-             } = Conformance.check_graph(paradigm, instance)
+             } = Conformance.check_graph(paradigm, graph)
     end
 
     test "validates ordered property constraints" do
@@ -213,19 +180,13 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "orderedProp" => ["value1", "value2", "value3"]
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "class1", %{
+                "orderedProp" => ["value1", "value2", "value3"]
+              })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "validates property cardinality edge cases" do
@@ -260,55 +221,37 @@ defmodule Paradigm.ConformanceTest do
       }
 
       # Test zero cardinality
-      graph1 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "zeroProp" => [],
-            "optionalProp" => [],
-            "infiniteProp" => ["value1"]
-          }
-        }
-      }
-
-      instance1 = %Instance{impl: MapImpl, data: graph1}
+      graph1 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "zeroProp" => [],
+                 "optionalProp" => [],
+                 "infiniteProp" => ["value1"]
+               })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance1)
+               Conformance.check_graph(paradigm, graph1)
 
       # Test optional property
-      graph2 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "zeroProp" => [],
-            "optionalProp" => ["value"],
-            "infiniteProp" => ["value1"]
-          }
-        }
-      }
-
-      instance2 = %Instance{impl: MapImpl, data: graph2}
+      graph2 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "zeroProp" => [],
+                 "optionalProp" => ["value"],
+                 "infiniteProp" => ["value1"]
+               })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance2)
+               Conformance.check_graph(paradigm, graph2)
 
       # Test infinite upper bound
-      graph3 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "zeroProp" => [],
-            "optionalProp" => [],
-            "infiniteProp" => List.duplicate("value", 100)
-          }
-        }
-      }
-
-      instance3 = %Instance{impl: MapImpl, data: graph3}
+      graph3 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "zeroProp" => [],
+                 "optionalProp" => [],
+                 "infiniteProp" => List.duplicate("value", 100)
+               })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance3)
+               Conformance.check_graph(paradigm, graph3)
     end
 
     test "validates composite property constraints" do
@@ -331,19 +274,13 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "compositeProp" => ["ref1", "ref2"]
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "class1", %{
+                "compositeProp" => ["ref1", "ref2"]
+              })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "detects missing required properties" do
@@ -363,14 +300,8 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "class1",
-          data: %{}
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "class1", %{})
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -382,7 +313,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "detects extra properties" do
@@ -395,16 +326,10 @@ defmodule Paradigm.ConformanceTest do
         }
       }
 
-      graph = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "extraProp" => "value"
-          }
-        }
-      }
-
-      instance = %Instance{impl: MapImpl, data: graph}
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "class1", %{
+                "extraProp" => "value"
+              })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -416,7 +341,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance)
+               Conformance.check_graph(paradigm, graph)
     end
 
     test "validates property cardinality" do
@@ -439,16 +364,10 @@ defmodule Paradigm.ConformanceTest do
       }
 
       # Test too few values
-      graph1 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "testProp" => ["value1"]
-          }
-        }
-      }
-
-      instance1 = %Instance{impl: MapImpl, data: graph1}
+      graph1 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "testProp" => ["value1"]
+               })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -460,19 +379,13 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance1)
+               Conformance.check_graph(paradigm, graph1)
 
       # Test too many values
-      graph2 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "testProp" => ["value1", "value2", "value3", "value4"]
-          }
-        }
-      }
-
-      instance2 = %Instance{impl: MapImpl, data: graph2}
+      graph2 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "testProp" => ["value1", "value2", "value3", "value4"]
+               })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -484,7 +397,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance2)
+               Conformance.check_graph(paradigm, graph2)
     end
 
     test "validates enumeration values" do
@@ -510,31 +423,19 @@ defmodule Paradigm.ConformanceTest do
       }
 
       # Test valid enum value
-      graph1 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "enumProp" => "RED"
-          }
-        }
-      }
-
-      instance1 = %Instance{impl: MapImpl, data: graph1}
+      graph1 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "enumProp" => "RED"
+               })
 
       assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, instance1)
+               Conformance.check_graph(paradigm, graph1)
 
       # Test invalid enum value
-      graph2 = %{
-        "node1" => %{
-          class: "class1",
-          data: %{
-            "enumProp" => "PURPLE"
-          }
-        }
-      }
-
-      instance2 = %Instance{impl: MapImpl, data: graph2}
+      graph2 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "class1", %{
+                 "enumProp" => "PURPLE"
+               })
 
       assert %Paradigm.Conformance.Result{
                issues: [
@@ -546,7 +447,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, instance2)
+               Conformance.check_graph(paradigm, graph2)
     end
   end
 end

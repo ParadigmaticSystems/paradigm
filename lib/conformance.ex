@@ -1,6 +1,4 @@
 defmodule Paradigm.Conformance do
-  alias Paradigm.Graph.Instance
-
   defmodule Issue do
     defstruct [:kind, :node_id, :property, :details]
 
@@ -32,22 +30,22 @@ defmodule Paradigm.Conformance do
     def valid?(%Result{}), do: false
   end
 
-  @spec check_graph(%Paradigm{}, Instance.t()) :: Result.t()
-  def check_graph(%Paradigm{} = paradigm, %Instance{impl: impl, data: data} = instance) do
+  @spec check_graph(%Paradigm{}, any()) :: Result.t()
+  def check_graph(%Paradigm{} = paradigm, graph) do
     issues =
-      impl.get_all_nodes(data)
-      |> Enum.flat_map(&validate_node(&1, paradigm, instance))
+      Paradigm.Graph.get_all_nodes(graph)
+      |> Enum.flat_map(&validate_node(&1, paradigm, graph))
 
     %Result{issues: issues}
   end
 
-  defp validate_node(node_id, paradigm, instance) do
-    with {:ok, node} <- get_node_safe(instance, node_id),
+  defp validate_node(node_id, paradigm, graph) do
+    with {:ok, node} <- get_node_safe(graph, node_id),
          {:ok, _class} <- get_class_safe(paradigm, node.class) do
-      validate_node_properties(node, node_id, paradigm, instance)
+      validate_node_properties(node, node_id, paradigm, graph)
     else
       {:error, :invalid_class} ->
-        class = get_node_class(instance, node_id)
+        class = get_node_class(graph, node_id)
         [%Issue{kind: :invalid_class, node_id: node_id, property: nil, details: %{class: class}}]
 
       {:error, :node_not_found} ->
@@ -55,14 +53,14 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_node_properties(node, node_id, paradigm, instance) do
+  defp validate_node_properties(node, node_id, paradigm, graph) do
     class = paradigm.classes[node.class]
     attributes = Paradigm.get_all_attributes(class, paradigm)
     properties = Enum.map(attributes, &paradigm.properties[&1])
 
     [
       validate_property_coverage(node, node_id, properties),
-      validate_property_values(node, node_id, properties, paradigm, instance)
+      validate_property_values(node, node_id, properties, paradigm, graph)
     ]
     |> List.flatten()
   end
@@ -85,23 +83,23 @@ defmodule Paradigm.Conformance do
     missing_issues ++ unknown_issues
   end
 
-  defp validate_property_values(node, node_id, properties, paradigm, instance) do
+  defp validate_property_values(node, node_id, properties, paradigm, graph) do
     Enum.flat_map(properties, fn property ->
       value = Map.get(node.data, property.name)
 
       # Only validate if the property is present
       if Map.has_key?(node.data, property.name) do
-        validate_property_value(node_id, property, value, paradigm, instance)
+        validate_property_value(node_id, property, value, paradigm, graph)
       else
         []
       end
     end)
   end
 
-  defp validate_property_value(node_id, property, value, paradigm, instance) do
+  defp validate_property_value(node_id, property, value, paradigm, graph) do
     [
       validate_cardinality(node_id, property, value),
-      validate_references(node_id, property, value, paradigm, instance),
+      validate_references(node_id, property, value, paradigm, graph),
       validate_enum_value(node_id, property, value, paradigm)
     ]
     |> List.flatten()
@@ -147,19 +145,19 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_references(node_id, property, value, paradigm, instance) do
+  defp validate_references(node_id, property, value, paradigm, graph) do
     if is_reference_property?(property, paradigm) do
       value
       |> normalize_to_list()
       |> Enum.reject(&is_nil/1)
-      |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, instance))
+      |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, graph))
     else
       []
     end
   end
 
-  defp validate_single_reference(node_id, property, referenced_id, paradigm, instance) do
-    case get_node_safe(instance, referenced_id) do
+  defp validate_single_reference(node_id, property, referenced_id, paradigm, graph) do
+    case get_node_safe(graph, referenced_id) do
       {:error, :node_not_found} ->
         [
           %Issue{
@@ -208,15 +206,15 @@ defmodule Paradigm.Conformance do
   end
 
   # Helper functions
-  defp get_node_safe(%Instance{impl: impl, data: data}, node_id) do
-    case impl.get_node(data, node_id) do
+  defp get_node_safe(graph, node_id) do
+    case Paradigm.Graph.get_node(graph, node_id) do
       nil -> {:error, :node_not_found}
       node -> {:ok, node}
     end
   end
 
-  defp get_node_class(%Instance{impl: impl, data: data}, node_id) do
-    case impl.get_node(data, node_id) do
+  defp get_node_class(graph, node_id) do
+    case Paradigm.Graph.get_node(graph, node_id) do
       nil -> nil
       node -> node.class
     end

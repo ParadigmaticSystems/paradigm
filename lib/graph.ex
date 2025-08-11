@@ -1,19 +1,33 @@
-defmodule Paradigm.Graph do
+defprotocol Paradigm.Graph do
   @moduledoc """
   Defines the behaviour for Graph implementations. This decouples operations (conformance, abstraction, transforms) from the underlying graph storage.
+  Think of "data" as "all the information that the implementation requires to complete the operation". It might be the graph itself, or a pointer to an external source.
   """
 
-  @type graph :: term()
   @type node_id :: Paradigm.id()
   @type class_id :: Paradigm.id()
 
-  @callback new() :: graph
-  @callback get_all_nodes(graph) :: [node_id]
-  @callback get_all_classes(graph) :: [class_id]
-  @callback get_node(graph, node_id) :: Node.t() | nil
-  @callback get_all_nodes_of_class(graph, class_id | [class_id]) :: [node_id]
-  @callback insert_node(graph, node_id, class_id, map()) :: graph
-  @callback insert_nodes(graph, map() | list()) :: graph
-  @callback get_node_data(graph, node_id, any(), any()) :: any()
-  @callback follow_reference(graph, node_id, any()) :: Node.t() | nil
+  @spec get_all_nodes(t()) :: [node_id]
+  def get_all_nodes(data)
+
+  @spec get_all_classes(t()) :: [class_id]
+  def get_all_classes(data)
+
+  @spec get_node(t(), node_id) :: Node.t() | nil
+  def get_node(data, node_id)
+
+  @spec get_all_nodes_of_class(t(), class_id | [class_id]) :: [node_id]
+  def get_all_nodes_of_class(data, class_id)
+
+  @spec insert_node(t(), node_id, class_id, map()) :: t()
+  def insert_node(data, node_id, class_id, attrs)
+
+  @spec insert_nodes(t(), map() | list()) :: t()
+  def insert_nodes(data, nodes)
+
+  @spec get_node_data(t(), node_id, any(), any()) :: any()
+  def get_node_data(data, node_id, key, default)
+
+  @spec follow_reference(t(), node_id, any()) :: Node.t() | nil
+  def follow_reference(data, node_id, reference)
 end

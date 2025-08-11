@@ -4,36 +4,30 @@ defmodule Paradigm.Abstraction do
   """
 
   @doc """
-  Takes any `Paradigm` and produces the corresponding `Paradigm.Graph.Instance` that is invariant against the Metamodel paradigm.
+  Takes any `Paradigm` and produces the corresponding graph that is invariant against the Metamodel paradigm.
   """
-  def embed(paradigm, graph_impl) do
-    graph =
-      graph_impl.new()
-      |> add_primitive_types(paradigm, graph_impl)
-      |> add_packages(paradigm, graph_impl)
-      |> add_classes(paradigm, graph_impl)
-      |> add_enumerations(paradigm, graph_impl)
-      |> add_properties(paradigm, graph_impl)
+  def embed(paradigm, graph \\ nil) do
+    graph = graph || Paradigm.Graph.MapGraph.new(name: paradigm.name, description: paradigm.description)
 
-    %Paradigm.Graph.Instance{
-      impl: graph_impl,
-      data: graph,
-      name: paradigm.name,
-      description: paradigm.description
-    }
+    graph
+    |> add_primitive_types(paradigm)
+    |> add_packages(paradigm)
+    |> add_classes(paradigm)
+    |> add_enumerations(paradigm)
+    |> add_properties(paradigm)
   end
 
-  defp add_primitive_types(graph, paradigm, graph_impl) do
+  defp add_primitive_types(graph, paradigm) do
     Enum.reduce(paradigm.primitive_types, graph, fn {id, primitive_type}, acc ->
       data = %{
         "name" => primitive_type.name
       }
 
-      graph_impl.insert_node(acc, id, "primitive_type", data)
+      Paradigm.Graph.insert_node(acc, id, "primitive_type", data)
     end)
   end
 
-  defp add_packages(graph, paradigm, graph_impl) do
+  defp add_packages(graph, paradigm) do
     Enum.reduce(paradigm.packages, graph, fn {id, package}, acc ->
       data = %{
         "name" => package.name,
@@ -42,11 +36,11 @@ defmodule Paradigm.Abstraction do
         "owned_types" => package.owned_types
       }
 
-      graph_impl.insert_node(acc, id, "package", data)
+      Paradigm.Graph.insert_node(acc, id, "package", data)
     end)
   end
 
-  defp add_classes(graph, paradigm, graph_impl) do
+  defp add_classes(graph, paradigm) do
     Enum.reduce(paradigm.classes, graph, fn {id, class}, acc ->
       data = %{
         "name" => class.name,
@@ -55,22 +49,22 @@ defmodule Paradigm.Abstraction do
         "super_classes" => class.super_classes
       }
 
-      graph_impl.insert_node(acc, id, "class", data)
+      Paradigm.Graph.insert_node(acc, id, "class", data)
     end)
   end
 
-  defp add_enumerations(graph, paradigm, graph_impl) do
+  defp add_enumerations(graph, paradigm) do
     Enum.reduce(paradigm.enumerations, graph, fn {id, enum}, acc ->
       data = %{
         "name" => enum.name,
         "literals" => enum.literals
       }
 
-      graph_impl.insert_node(acc, id, "enumeration", data)
+      Paradigm.Graph.insert_node(acc, id, "enumeration", data)
     end)
   end
 
-  defp add_properties(graph, paradigm, graph_impl) do
+  defp add_properties(graph, paradigm) do
     Enum.reduce(paradigm.properties, graph, fn {id, property}, acc ->
       data = %{
         "name" => property.name,
@@ -82,22 +76,17 @@ defmodule Paradigm.Abstraction do
         "default_value" => property.default_value
       }
 
-      graph_impl.insert_node(acc, id, "property", data)
+      Paradigm.Graph.insert_node(acc, id, "property", data)
     end)
   end
 
   @doc """
-  Takes a `Paradigm.Graph.Instance` of metamodel type, and returns a top-level `Paradigm` object.
+  Takes a graph of metamodel type, and returns a top-level `Paradigm` object.
   """
-  def extract(%Paradigm.Graph.Instance{
-        impl: impl,
-        data: data,
-        name: name,
-        description: description
-      }) do
+  def extract(graph) do
     primitive_types =
-      impl.get_all_nodes_of_class(data, "primitive_type")
-      |> Enum.map(fn id -> {id, impl.get_node(data, id)} end)
+      Paradigm.Graph.get_all_nodes_of_class(graph, "primitive_type")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
         {id,
          %Paradigm.PrimitiveType{
@@ -107,8 +96,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     packages =
-      impl.get_all_nodes_of_class(data, "package")
-      |> Enum.map(fn id -> {id, impl.get_node(data, id)} end)
+      Paradigm.Graph.get_all_nodes_of_class(graph, "package")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
         {id,
          %Paradigm.Package{
@@ -121,8 +110,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     classes =
-      impl.get_all_nodes_of_class(data, "class")
-      |> Enum.map(fn id -> {id, impl.get_node(data, id)} end)
+      Paradigm.Graph.get_all_nodes_of_class(graph, "class")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
         {id,
          %Paradigm.Class{
@@ -135,8 +124,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     enumerations =
-      impl.get_all_nodes_of_class(data, "enumeration")
-      |> Enum.map(fn id -> {id, impl.get_node(data, id)} end)
+      Paradigm.Graph.get_all_nodes_of_class(graph, "enumeration")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
         {id,
          %Paradigm.Enumeration{
@@ -147,8 +136,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     properties =
-      impl.get_all_nodes_of_class(data, "property")
-      |> Enum.map(fn id -> {id, impl.get_node(data, id)} end)
+      Paradigm.Graph.get_all_nodes_of_class(graph, "property")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
         {id,
          %Paradigm.Property{
@@ -164,8 +153,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     %Paradigm{
-      name: name,
-      description: description,
+      name: graph.metadata[:name],
+      description: graph.metadata[:description],
       primitive_types: primitive_types,
       packages: packages,
       classes: classes,
