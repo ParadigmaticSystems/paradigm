@@ -5,7 +5,7 @@ defmodule Paradigm.Canonical.Filesystem do
   alias Paradigm.{Package, Class, Property, PrimitiveType}
   def definition do
     %Paradigm{
-      name: "FileSystem",
+      name: "Filesystem",
       description: "Describes file/folder structure including file contents.",
       primitive_types: %{"string" => %PrimitiveType{name: "String"}},
       packages: %{

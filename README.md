@@ -27,7 +27,7 @@ This provides an ergonomic core for next-generation MBSE tooling.
 - **`Paradigm.Graph` Protocol** - A set of functions for accessing graph nodes
 - **`Paradigm.Graph.Node`** - Standardized form for individual entity instances
 - **`Paradigm.Graph.MapGraph`** - An in-memory graph implementation
-- **`Paradigm.Graph.FilesystemImpl`** - Provides folder and file nodes from local storage
+- **`Paradigm.Graph.FilesystemGraph`** - Provides folder and file nodes from local storage
 
 ## Paradigm Operations
 For these examples we'll use the provided Metamodel paradigm:
@@ -130,7 +130,7 @@ Here's a basic example using the canonical metamodel:
 paradigm = Paradigm.Canonical.Metamodel.definition()
 
 # Embed it into a graph for manipulation
-graph_instance = Paradigm.Abstraction.embed(paradigm, Paradigm.Graph.MapImpl)
+graph_instance = Paradigm.Abstraction.embed(paradigm)
 
 # Validate that the embedded graph conforms to the metamodel
 Paradigm.Conformance.check_graph(paradigm, graph_instance)

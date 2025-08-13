@@ -6,7 +6,7 @@ defmodule Paradigm.Canonical.Metamodel do
 
   def definition do
     %Paradigm{
-      name: "MetaModel",
+      name: "Metamodel",
       description: "Paradigm self-model",
       primitive_types: %{
         "boolean" => %PrimitiveType{name: "Boolean"},
