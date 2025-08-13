@@ -2,6 +2,7 @@ defmodule Paradigm.ConformanceTest do
   use ExUnit.Case
   alias Paradigm.Conformance
   alias Paradigm.Graph.MapGraph
+  alias Paradigm.Graph.Node.Ref
 
   describe "check_graph/2" do
     test "validates valid graph" do
@@ -145,7 +146,7 @@ defmodule Paradigm.ConformanceTest do
       graph = MapGraph.new()
               |> Paradigm.Graph.insert_node("node1", "cow", %{})
               |> Paradigm.Graph.insert_node("node2", "garage", %{
-                "vehicleRef" => "node1"
+                "vehicleRef" => %Ref{id: "node1"}
               })
 
       assert %Paradigm.Conformance.Result{
@@ -154,6 +155,166 @@ defmodule Paradigm.ConformanceTest do
                    property: "vehicleRef",
                    kind: :references_wrong_class,
                    details: %{class: "cow"},
+                   node_id: "node2"
+                 }
+               ]
+             } = Conformance.check_graph(paradigm, graph)
+    end
+
+    test "validates valid reference to correct class" do
+      paradigm = %Paradigm{
+        classes: %{
+          "vehicle" => %Paradigm.Class{
+            name: "Vehicle",
+            owned_attributes: []
+          },
+          "truck" => %Paradigm.Class{
+            name: "Truck",
+            super_classes: ["vehicle"],
+            owned_attributes: []
+          },
+          "garage" => %Paradigm.Class{
+            name: "Garage",
+            owned_attributes: ["vehicle_ref"]
+          }
+        },
+        properties: %{
+          "vehicle_ref" => %Paradigm.Property{
+            name: "vehicleRef",
+            lower_bound: 1,
+            upper_bound: 1,
+            type: "vehicle"
+          }
+        }
+      }
+
+      # Test direct class match
+      graph1 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "vehicle", %{})
+               |> Paradigm.Graph.insert_node("node2", "garage", %{
+                 "vehicleRef" => %Ref{id: "node1"}
+               })
+
+      assert %Paradigm.Conformance.Result{issues: []} =
+               Conformance.check_graph(paradigm, graph1)
+
+      # Test subclass match
+      graph2 = MapGraph.new()
+               |> Paradigm.Graph.insert_node("node1", "truck", %{})
+               |> Paradigm.Graph.insert_node("node2", "garage", %{
+                 "vehicleRef" => %Ref{id: "node1"}
+               })
+
+      assert %Paradigm.Conformance.Result{issues: []} =
+               Conformance.check_graph(paradigm, graph2)
+    end
+
+    test "detects reference to nonexistent node" do
+      paradigm = %Paradigm{
+        classes: %{
+          "vehicle" => %Paradigm.Class{
+            name: "Vehicle",
+            owned_attributes: []
+          },
+          "garage" => %Paradigm.Class{
+            name: "Garage",
+            owned_attributes: ["vehicle_ref"]
+          }
+        },
+        properties: %{
+          "vehicle_ref" => %Paradigm.Property{
+            name: "vehicleRef",
+            lower_bound: 1,
+            upper_bound: 1,
+            type: "vehicle"
+          }
+        }
+      }
+
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "garage", %{
+                "vehicleRef" => %Ref{id: "nonexistent_node"}
+              })
+
+      assert %Paradigm.Conformance.Result{
+               issues: [
+                 %Paradigm.Conformance.Issue{
+                   property: "vehicleRef",
+                   kind: :references_missing_node,
+                   details: %{referenced_id: "nonexistent_node"},
+                   node_id: "node1"
+                 }
+               ]
+             } = Conformance.check_graph(paradigm, graph)
+    end
+
+    test "validates multiple references in collection" do
+      paradigm = %Paradigm{
+        classes: %{
+          "vehicle" => %Paradigm.Class{
+            name: "Vehicle",
+            owned_attributes: []
+          },
+          "garage" => %Paradigm.Class{
+            name: "Garage",
+            owned_attributes: ["vehicle_refs"]
+          }
+        },
+        properties: %{
+          "vehicle_refs" => %Paradigm.Property{
+            name: "vehicleRefs",
+            lower_bound: 0,
+            upper_bound: :infinity,
+            type: "vehicle"
+          }
+        }
+      }
+
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "vehicle", %{})
+              |> Paradigm.Graph.insert_node("node2", "vehicle", %{})
+              |> Paradigm.Graph.insert_node("node3", "garage", %{
+                "vehicleRefs" => [%Ref{id: "node1"}, %Ref{id: "node2"}]
+              })
+
+      assert %Paradigm.Conformance.Result{issues: []} =
+               Conformance.check_graph(paradigm, graph)
+    end
+
+    test "validates mixed references and dangling references in collection" do
+      paradigm = %Paradigm{
+        classes: %{
+          "vehicle" => %Paradigm.Class{
+            name: "Vehicle",
+            owned_attributes: []
+          },
+          "garage" => %Paradigm.Class{
+            name: "Garage",
+            owned_attributes: ["vehicle_refs"]
+          }
+        },
+        properties: %{
+          "vehicle_refs" => %Paradigm.Property{
+            name: "vehicleRefs",
+            lower_bound: 0,
+            upper_bound: :infinity,
+            type: "vehicle"
+          }
+        }
+      }
+
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "vehicle", %{})
+              |> Paradigm.Graph.insert_node("node2", "garage", %{
+                "vehicleRefs" => [%Ref{id: "node1"}, %Ref{id: "missing_node"}]
+              })
+
+      assert %Paradigm.Conformance.Result{
+               issues: [
+                 %Paradigm.Conformance.Issue{
+                   property: "vehicleRefs",
+                   kind: :references_missing_node,
+                   details: %{referenced_id: "missing_node"},
                    node_id: "node2"
                  }
                ]
@@ -254,6 +415,46 @@ defmodule Paradigm.ConformanceTest do
                Conformance.check_graph(paradigm, graph3)
     end
 
+    test "detects non-reference value for reference property" do
+      paradigm = %Paradigm{
+        classes: %{
+          "vehicle" => %Paradigm.Class{
+            name: "Vehicle",
+            owned_attributes: []
+          },
+          "garage" => %Paradigm.Class{
+            name: "Garage",
+            owned_attributes: ["vehicle_ref"]
+          }
+        },
+        properties: %{
+          "vehicle_ref" => %Paradigm.Property{
+            name: "vehicleRef",
+            lower_bound: 1,
+            upper_bound: 1,
+            type: "vehicle"
+          }
+        }
+      }
+
+      # Property should contain %Ref{} but has string instead
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node("node1", "garage", %{
+                "vehicleRef" => "not_a_reference"  # Should be %Ref{id: "..."}
+              })
+
+      assert %Paradigm.Conformance.Result{
+        issues: [
+          %Paradigm.Conformance.Issue{
+            property: "vehicleRef",
+            kind: :expected_reference,
+            details: %{actual_type: "string"},
+            node_id: "node1"
+          }
+        ]
+      } = Conformance.check_graph(paradigm, graph)
+    end
+
     test "validates composite property constraints" do
       paradigm = %Paradigm{
         primitive_types: %{"string" => %Paradigm.PrimitiveType{name: "String"}},
@@ -276,7 +477,7 @@ defmodule Paradigm.ConformanceTest do
 
       graph = MapGraph.new()
               |> Paradigm.Graph.insert_node("node1", "class1", %{
-                "compositeProp" => ["ref1", "ref2"]
+                "compositeProp" => [%Ref{id: "ref1"}, %Ref{id: "ref2"}]
               })
 
       assert %Paradigm.Conformance.Result{issues: []} =

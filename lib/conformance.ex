@@ -1,4 +1,6 @@
 defmodule Paradigm.Conformance do
+  alias Paradigm.Graph.Node.Ref
+
   defmodule Issue do
     defstruct [:kind, :node_id, :property, :details]
 
@@ -12,7 +14,8 @@ defmodule Paradigm.Conformance do
               | :should_be_list
               | :references_missing_node
               | :references_wrong_class
-              | :invalid_enum_value,
+              | :invalid_enum_value
+              | :expected_reference,
             node_id: Paradigm.id(),
             property: String.t() | nil,
             details: map() | nil
@@ -147,16 +150,37 @@ defmodule Paradigm.Conformance do
 
   defp validate_references(node_id, property, value, paradigm, graph) do
     if is_reference_property?(property, paradigm) do
-      value
-      |> normalize_to_list()
-      |> Enum.reject(&is_nil/1)
-      |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, graph))
+      issues_from_refs =
+        value
+        |> extract_refs()
+        |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, graph))
+
+      issues_from_non_refs = validate_non_reference_values(node_id, property, value, paradigm)
+
+      issues_from_refs ++ issues_from_non_refs
     else
       []
     end
   end
 
-  defp validate_single_reference(node_id, property, referenced_id, paradigm, graph) do
+  defp validate_non_reference_values(node_id, property, value, paradigm) do
+    if is_reference_property?(property, paradigm) do
+      non_ref_values = extract_non_refs(value)
+
+      Enum.map(non_ref_values, fn non_ref_value ->
+        %Issue{
+          kind: :expected_reference,
+          node_id: node_id,
+          property: property.name,
+          details: %{actual_type: get_type_name(non_ref_value)}
+        }
+      end)
+    else
+      []
+    end
+  end
+
+  defp validate_single_reference(node_id, property, %Ref{id: referenced_id}, paradigm, graph) do
     case get_node_safe(graph, referenced_id) do
       {:error, :node_not_found} ->
         [
@@ -230,6 +254,29 @@ defmodule Paradigm.Conformance do
   defp normalize_to_list(value) when is_list(value), do: value
   defp normalize_to_list(nil), do: []
   defp normalize_to_list(value), do: [value]
+
+  defp extract_refs(value) when is_list(value) do
+    Enum.filter(value, &match?(%Ref{}, &1))
+  end
+
+  defp extract_refs(%Ref{} = ref), do: [ref]
+  defp extract_refs(_), do: []
+
+  defp extract_non_refs(value) when is_list(value) do
+    Enum.reject(value, &(match?(%Ref{}, &1) or is_nil(&1)))
+  end
+
+  defp extract_non_refs(%Ref{}), do: []
+  defp extract_non_refs(nil), do: []
+  defp extract_non_refs(value), do: [value]
+
+  defp get_type_name(value) when is_binary(value), do: "string"
+  defp get_type_name(value) when is_integer(value), do: "integer"
+  defp get_type_name(value) when is_float(value), do: "float"
+  defp get_type_name(value) when is_boolean(value), do: "boolean"
+  defp get_type_name(value) when is_list(value), do: "list"
+  defp get_type_name(value) when is_map(value), do: "map"
+  defp get_type_name(_), do: "unknown"
 
   defp get_count(value) when is_list(value), do: length(value)
   defp get_count(nil), do: 0

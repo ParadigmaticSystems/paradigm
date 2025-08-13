@@ -2,6 +2,9 @@ defmodule Paradigm.Universe do
   @moduledoc """
     Helpers for working with content-addressed Universe graphs.
   """
+
+  alias Paradigm.Graph.Node.Ref
+
   def generate_graph_id(graph) do
     Base.encode16(:crypto.hash(:sha256, :erlang.term_to_binary(graph)))
     |> String.slice(-5..-1)
@@ -19,8 +22,8 @@ defmodule Paradigm.Universe do
      id <> "_" <> paradigm_id,
      "instantiation",
      %{
-       paradigm: paradigm_id,
-       instance: id,
+       paradigm: %Ref{id: paradigm_id},
+       instance: %Ref{id: id},
        conformance_result: nil})
   end
 
@@ -31,8 +34,8 @@ defmodule Paradigm.Universe do
       %{
       name: Module.split(module) |> List.last(),
       module: module,
-      source: from,
-      target: to
+      source: %Ref{id: from},
+      target: %Ref{id: to}
       }
     )
   end

@@ -83,7 +83,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   def follow_reference(%{nodes: graph} = map_graph, node_id, reference_key) do
     case get_node_data(map_graph, node_id, reference_key) do
       nil -> nil
-      ref_id -> graph[ref_id]
+      %Node.Ref{id: ref_id} -> graph[ref_id]
     end
   end
 

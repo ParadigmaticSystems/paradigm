@@ -25,4 +25,4 @@ paradigm-*.tar
 /.elixir_ls/
 /result/
 /.nix-mix/
-/.hex-mix/
+/.nix-hex/

@@ -52,8 +52,8 @@ defmodule ParadigmTest do
       assert Paradigm.Graph.get_node(transformed_universe, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"].issues == []
       [transform_instance] = Paradigm.Graph.get_all_nodes_of_class(transformed_universe, "transform_instance")
       |> Enum.map(&Paradigm.Graph.get_node(transformed_universe, &1))
-      assert transform_instance.data["source"] == metamodel_id
-      assert transform_instance.data["target"] == metamodel_id
+      assert transform_instance.data["source"].id == metamodel_id
+      assert transform_instance.data["target"].id == metamodel_id
 
       universe_paradigm = Paradigm.Canonical.Universe.definition()
       assert %Paradigm.Conformance.Result{issues: []} = Paradigm.Conformance.check_graph(universe_paradigm, transformed_universe)

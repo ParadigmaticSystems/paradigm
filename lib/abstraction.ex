@@ -3,6 +3,8 @@ defmodule Paradigm.Abstraction do
   Functions for moving between Paradigm structs and corresponding graph data.
   """
 
+  alias Paradigm.Graph.Node.Ref
+
   @doc """
   Takes any `Paradigm` and produces the corresponding graph that is invariant against the Metamodel paradigm.
   """
@@ -32,8 +34,8 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => package.name,
         "uri" => package.uri,
-        "nested_packages" => package.nested_packages,
-        "owned_types" => package.owned_types
+        "nested_packages" => Enum.map(package.nested_packages || [], &%Ref{id: &1}),
+        "owned_types" => Enum.map(package.owned_types || [], &%Ref{id: &1})
       }
 
       Paradigm.Graph.insert_node(acc, id, "package", data)
@@ -45,8 +47,8 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => class.name,
         "is_abstract" => class.is_abstract,
-        "owned_attributes" => class.owned_attributes,
-        "super_classes" => class.super_classes
+        "owned_attributes" => Enum.map(class.owned_attributes || [], &%Ref{id: &1}),
+        "super_classes" => Enum.map(class.super_classes || [], &%Ref{id: &1})
       }
 
       Paradigm.Graph.insert_node(acc, id, "class", data)
@@ -69,7 +71,7 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => property.name,
         "is_ordered" => property.is_ordered,
-        "type" => property.type,
+        "type" => if(property.type, do: %Ref{id: property.type}, else: nil),
         "is_composite" => property.is_composite,
         "lower_bound" => property.lower_bound,
         "upper_bound" => property.upper_bound,
@@ -103,8 +105,8 @@ defmodule Paradigm.Abstraction do
          %Paradigm.Package{
            name: node.data["name"],
            uri: node.data["uri"],
-           nested_packages: node.data["nested_packages"],
-           owned_types: node.data["owned_types"]
+           nested_packages: extract_ref_ids(node.data["nested_packages"]),
+           owned_types: extract_ref_ids(node.data["owned_types"])
          }}
       end)
       |> Map.new()
@@ -117,8 +119,8 @@ defmodule Paradigm.Abstraction do
          %Paradigm.Class{
            name: node.data["name"],
            is_abstract: node.data["is_abstract"],
-           owned_attributes: node.data["owned_attributes"],
-           super_classes: node.data["super_classes"]
+           owned_attributes: extract_ref_ids(node.data["owned_attributes"]),
+           super_classes: extract_ref_ids(node.data["super_classes"])
          }}
       end)
       |> Map.new()
@@ -143,7 +145,7 @@ defmodule Paradigm.Abstraction do
          %Paradigm.Property{
            name: node.data["name"],
            is_ordered: node.data["is_ordered"],
-           type: node.data["type"],
+           type: extract_ref_id(node.data["type"]),
            is_composite: node.data["is_composite"],
            lower_bound: node.data["lower_bound"],
            upper_bound: node.data["upper_bound"],
@@ -162,4 +164,16 @@ defmodule Paradigm.Abstraction do
       properties: properties
     }
   end
+
+  defp extract_ref_ids(nil), do: []
+  defp extract_ref_ids(refs) when is_list(refs) do
+    Enum.map(refs, fn
+      %Ref{id: id} -> id
+      id when is_binary(id) -> id
+    end)
+  end
+
+  defp extract_ref_id(nil), do: nil
+  defp extract_ref_id(%Ref{id: id}), do: id
+  defp extract_ref_id(id) when is_binary(id), do: id
 end

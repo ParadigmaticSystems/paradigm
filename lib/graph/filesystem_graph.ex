@@ -200,28 +200,42 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
       {:error, _} -> ""
     end
 
-    %{
-      "name" => Path.basename(full_path),
-      "contents" => contents,
-      "extension" => Path.extname(full_path),
-      "parent" => make_relative(root_path, Path.dirname(full_path))
-    }
-  end
-
-  defp build_folder_data(full_path, root_path) do
-    children = case File.ls(full_path) do
-      {:ok, entries} ->
-        Enum.map(entries, fn entry ->
-          child_path = Path.join(full_path, entry)
-          make_relative(root_path, child_path)
-        end)
-      {:error, _} -> []
+    parent_path = Path.dirname(full_path)
+    parent_ref = if parent_path != full_path do
+      %Node.Ref{id: make_relative(root_path, parent_path)}
+    else
+      nil
     end
 
     %{
       "name" => Path.basename(full_path),
-      "children" => children,
-      "parent" => make_relative(root_path, Path.dirname(full_path))
+      "contents" => contents,
+      "extension" => Path.extname(full_path),
+      "parent" => parent_ref
+    }
+  end
+
+  defp build_folder_data(full_path, root_path) do
+    children_refs = case File.ls(full_path) do
+      {:ok, entries} ->
+        Enum.map(entries, fn entry ->
+          child_path = Path.join(full_path, entry)
+          %Node.Ref{id: make_relative(root_path, child_path)}
+        end)
+      {:error, _} -> []
+    end
+
+    parent_path = Path.dirname(full_path)
+    parent_ref = if parent_path != full_path do
+      %Node.Ref{id: make_relative(root_path, parent_path)}
+    else
+      nil
+    end
+
+    %{
+      "name" => Path.basename(full_path),
+      "children" => children_refs,
+      "parent" => parent_ref
     }
   end
 
