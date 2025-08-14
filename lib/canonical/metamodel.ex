@@ -10,11 +10,8 @@ defmodule Paradigm.Canonical.Metamodel do
       description: "Paradigm self-model",
       primitive_types: %{
         "boolean" => %PrimitiveType{name: "Boolean"},
-        "float" => %PrimitiveType{name: "Float"},
-        "double" => %PrimitiveType{name: "Double"},
         "integer" => %PrimitiveType{name: "Integer"},
         "string" => %PrimitiveType{name: "String"},
-        "void" => %PrimitiveType{name: "Void"}
       },
       packages: %{
         "metamodel_package" => %Package{
