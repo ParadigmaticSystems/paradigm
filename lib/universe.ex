@@ -10,14 +10,15 @@ defmodule Paradigm.Universe do
     |> String.slice(-5..-1)
   end
 
-  def insert_graph_with_paradigm(universe_graph, graph, paradigm_id) do
+  def insert_graph_with_paradigm(universe_graph, graph, name, paradigm_id) do
     id = generate_graph_id(graph)
     universe_graph
     |> Paradigm.Graph.insert_node(
       id,
       "registered_graph",
       %{
-        graph: graph})
+        graph: graph,
+        name: name})
     |> Paradigm.Graph.insert_node(
      id <> "_" <> paradigm_id,
      "instantiation",

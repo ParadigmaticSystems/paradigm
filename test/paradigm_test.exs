@@ -43,7 +43,7 @@ defmodule ParadigmTest do
       metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
 
       universe_instance = Paradigm.Graph.MapGraph.new(name: "universe_model", description: "Test universe")
-      |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, metamodel_id)
+      |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
       |> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
       assert Paradigm.Graph.get_node(universe_instance, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"] == nil
 

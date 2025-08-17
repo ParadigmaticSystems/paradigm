@@ -24,7 +24,7 @@ defmodule Paradigm.Canonical.Universe do
       classes: %{
         "registered_graph" => %Class{
           name: "RegisteredGraph",
-          owned_attributes: ["graph"],
+          owned_attributes: ["graph_name", "graph"],
         },
         "instantiation" => %Class{
           name: "Instantiation",
@@ -44,6 +44,10 @@ defmodule Paradigm.Canonical.Universe do
         "graph" => %Property{
           name: "graph",
           type: "graph"
+        },
+        "graph_name" => %Property{
+          name: "name",
+          type: "string"
         },
         "instantiation_paradigm" => %Property{
           name: "paradigm",

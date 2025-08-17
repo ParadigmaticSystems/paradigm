@@ -89,7 +89,9 @@ defmodule Paradigm.Transform.Propagate do
 
   defp create_transform_instance(universe, transform_node_id, source_graph_id) do
     transform_node = Paradigm.Graph.get_node(universe, transform_node_id)
-    result_graph = apply_transform(universe, transform_node, source_graph_id)
+    registered_graph = Paradigm.Graph.get_node(universe, source_graph_id)
+    source_graph = registered_graph.data["graph"]
+    {:ok, result_graph} = apply(transform_node.data["module"], :transform, [source_graph, Paradigm.Graph.MapGraph.new(source_graph.metadata), %{}])
     target_id = Paradigm.Universe.generate_graph_id(result_graph)
 
     Paradigm.Graph.insert_node(universe, "#{transform_node.data["name"]}_from_#{source_graph_id}_to_#{target_id}", "transform_instance", %{
@@ -101,13 +103,9 @@ defmodule Paradigm.Transform.Propagate do
     })
     |> Paradigm.Graph.insert_node(target_id, "registered_graph",
     %{
-      graph: result_graph
+      graph: result_graph,
+      name: registered_graph.data["name"]
     })
   end
 
-  defp apply_transform(universe, transform_node, source_graph_id) do
-    source_graph = Paradigm.Graph.get_node(universe, source_graph_id).data["graph"]
-    {:ok, result_graph} = apply(transform_node.data["module"], :transform, [source_graph, Paradigm.Graph.MapGraph.new(source_graph.metadata), %{}])
-    result_graph
-  end
 end
