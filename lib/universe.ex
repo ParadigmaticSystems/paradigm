@@ -3,6 +3,7 @@ defmodule Paradigm.Universe do
     Helpers for working with content-addressed Universe graphs.
   """
 
+  alias Paradigm.Graph
   alias Paradigm.Graph.Node.Ref
 
   def generate_graph_id(graph) do
@@ -39,6 +40,30 @@ defmodule Paradigm.Universe do
       target: %Ref{id: to}
       }
     )
+  end
+
+  def bootstrap() do
+    metamodel = Paradigm.Canonical.Metamodel.definition()
+    metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
+    metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
+    Paradigm.Graph.MapGraph.new(name: "universe_model", description: "Test universe")
+    |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
+  end
+
+  def get_paradigm_for(universe, node_id) do
+    instantiations = Graph.get_all_nodes_of_class(universe, "instantiation")
+    registered_paradigm_graph = Enum.find_value(instantiations, fn inst_node_id ->
+      inst_node = Graph.get_node(universe, inst_node_id)
+      if inst_node.data["instance"].id == node_id do
+        Graph.get_node(universe, inst_node.data["paradigm"].id)
+      end
+    end)
+
+    if registered_paradigm_graph do
+      Paradigm.Abstraction.extract(registered_paradigm_graph.data["graph"])
+    else
+      false
+    end
   end
 
 end

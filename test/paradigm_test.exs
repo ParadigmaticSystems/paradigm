@@ -36,15 +36,18 @@ defmodule ParadigmTest do
       assert %Paradigm.Conformance.Result{issues: []} = Paradigm.Conformance.check_graph(filesystem_paradigm, filesystem_graph)
     end
 
+    test "bootstrap universe" do
+      bootstrap_universe_graph = Paradigm.Universe.bootstrap()
+      [ metamodel_id ] = Paradigm.Graph.get_all_nodes_of_class(bootstrap_universe_graph, "registered_graph")
+      paradigm = Paradigm.Universe.get_paradigm_for(bootstrap_universe_graph, metamodel_id)
+      assert paradigm == Paradigm.Canonical.Metamodel.definition()
+    end
+
     test "universe example" do
-      metamodel_graph = Paradigm.Canonical.Metamodel.definition()
-      |> Paradigm.Abstraction.embed()
+      bootstrap_universe_graph = Paradigm.Universe.bootstrap()
+      [ metamodel_id ] = Paradigm.Graph.get_all_nodes_of_class(bootstrap_universe_graph, "registered_graph")
 
-      metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
-
-      universe_instance = Paradigm.Graph.MapGraph.new(name: "universe_model", description: "Test universe")
-      |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
-      |> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
+      universe_instance = bootstrap_universe_graph |> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
       assert Paradigm.Graph.get_node(universe_instance, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"] == nil
 
       {:ok, transformed_universe} = Paradigm.Transform.Propagate.transform(universe_instance, universe_instance, %{})
