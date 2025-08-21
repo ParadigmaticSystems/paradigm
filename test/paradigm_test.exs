@@ -49,11 +49,14 @@ defmodule ParadigmTest do
 
       universe_instance = bootstrap_universe_graph |> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
       assert Paradigm.Graph.get_node(universe_instance, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"] == nil
-
+      assert Paradigm.Universe.all_instantiations_conformant?(universe_instance) == false
       transformed_universe = Paradigm.Universe.apply_propagate(universe_instance)
 
       #The transform has performed the conformance test:
       assert Paradigm.Graph.get_node(transformed_universe, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"].issues == []
+      assert Paradigm.Universe.all_instantiations_conformant?(transformed_universe) == true
+
+      #source and target of the executed Identity transform match
       [transform_instance] = Paradigm.Graph.get_all_nodes_of_class(transformed_universe, "transform_instance")
       |> Enum.map(&Paradigm.Graph.get_node(transformed_universe, &1))
       assert transform_instance.data["source"].id == metamodel_id

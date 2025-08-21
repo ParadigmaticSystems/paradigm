@@ -86,4 +86,15 @@ defmodule Paradigm.Universe do
     transformed_universe
   end
 
+  def all_instantiations_conformant?(universe_graph) do
+    universe_graph
+    |> Graph.get_all_nodes_of_class("instantiation")
+    |> Enum.all?(fn node_id ->
+      case Graph.get_node_data(universe_graph, node_id, "conformance_result", nil) do
+        nil -> false
+        result -> result.issues == []
+      end
+    end)
+  end
+
 end
