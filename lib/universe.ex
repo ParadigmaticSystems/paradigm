@@ -42,11 +42,11 @@ defmodule Paradigm.Universe do
     )
   end
 
-  def bootstrap() do
+  def bootstrap(name \\ "universe_model", description \\ "Test universe") do
     metamodel = Paradigm.Canonical.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
-    Paradigm.Graph.MapGraph.new(name: "universe_model", description: "Test universe")
+    Paradigm.Graph.MapGraph.new(name: name, description: description)
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
   end
 
@@ -64,6 +64,26 @@ defmodule Paradigm.Universe do
     else
       false
     end
+  end
+
+  def insert_paradigm(universe_graph, paradigm) do
+    paradigm_graph = Paradigm.Abstraction.embed(paradigm)
+    metamodel_id = find_by_name(universe_graph, "Metamodel")
+
+    universe_graph
+    |> Paradigm.Universe.insert_graph_with_paradigm(paradigm_graph, paradigm.name, metamodel_id)
+  end
+
+  def find_by_name(universe_graph, name) do
+    Paradigm.Graph.get_all_nodes_of_class(universe_graph, "registered_graph")
+    |> Enum.find(fn id ->
+      Paradigm.Graph.get_node_data(universe_graph, id, "name", "") == name
+    end)
+  end
+
+  def apply_propagate(universe_graph) do
+    {:ok, transformed_universe} = Paradigm.Transform.Propagate.transform(universe_graph, universe_graph, %{})
+    transformed_universe
   end
 
 end
