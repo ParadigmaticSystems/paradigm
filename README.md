@@ -57,7 +57,12 @@ Paradigm.Abstraction.extract(embedded_metamodel) == metamodel_paradigm
 
 The embedded metamodel validates against itself:
 ```elixir
-Paradigm.Conformance.check_graph(metamodel_paradigm, embedded_metamodel)
+Paradigm.Conformance.check_graph(embedded_metamodel, metamodel_paradigm)
+```
+
+Or if a graph is passed, the module will attempt to extract a paradigm:
+```elixir
+Paradigm.Conformance.check_graph(embedded_metamodel, embedded_metamodel)
 ```
 
 ### Transform
@@ -73,26 +78,20 @@ embedded_metamodel == transformed_graph
 ```
 
 ## Universe Paradigm
-`Paradigm.Canonical.Universe` is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. Then the actual built-in operations can be used in transform modules. The `Paradigm.Universe` module supports content-addressed graphs, which is useful for round-tripping and equality checks on transforms.
+The `Paradigm.Canonical.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
 
-### Propagate
-The `Paradigm.Transform.Propagate` transform module takes `Universe`->`Universe` where any potential conformance checks or transformations are applied. So all the stuff we did in the above section can be achieved *internally* in a `Universe`-conformant graph:
+* `Paradigm.Universe.bootstrap/0` sets up the canonical metamodel self-realization relationship.
+* `Paradigm.Universe.apply_propagate/1` applies the `Paradigm.Transform.Propagate` transform. This looks for places to apply conformance checks or internal transforms.
 
-* Paradigm conformance is checked by `Paradigm.Abstraction.extract/1` and `Paradigm.Conformance.check_graph/2`. The Universe does not contain Paradigms- only Graphs, with all relationships bootstrapped by the metamodel's self-relationship.
-* Transforms, registered against source and target paradigms, leave `TransformInstance` elements for tracing the flow of data. So we see, for example, that `Paradigm.Transform.Identity` leaves a `TransformInstance` with the same source and target id - indicating equality.
+So all the embedding, conformance checking and trasnforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
 
 ```elixir
-metamodel_graph = Paradigm.Canonical.Metamodel.definition()
-|> Paradigm.Abstraction.embed()
-metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
-universe_instance = Paradigm.Graph.MapGraph.new()
-|> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, metamodel_id)
-|> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
-
-{:ok, transformed_universe} = Paradigm.Transform.Propagate.transform(universe_instance, universe_instance, %{})
+Paradigm.Universe.bootstrap()
+|> Paradigm.Universe.register_transform_by_name(Paradigm.Transform.Identity, "Metamodel", "Metamodel")
+|> Paradigm.Universe.apply_propagate()
+|> Paradigm.Conformance.conforms?(Paradigm.Canonical.Universe.definition())
 ```
 
-Conformance checks and transform results can be observed in `transformed_universe`.
 ## Installation
 
 If available in [Hex](https://hex.pm/docs/publish), add `paradigm` to your list of dependencies in `mix.exs`:
@@ -130,13 +129,13 @@ Here's a basic example using the canonical metamodel:
 paradigm = Paradigm.Canonical.Metamodel.definition()
 
 # Embed it into a graph for manipulation
-graph_instance = Paradigm.Abstraction.embed(paradigm)
+graph = Paradigm.Abstraction.embed(paradigm)
 
 # Validate that the embedded graph conforms to the metamodel
-Paradigm.Conformance.check_graph(paradigm, graph_instance)
+Paradigm.Conformance.check_graph(graph, paradigm)
 # => %Paradigm.Conformance.Result{issues: []}
 
 # Extract back to a Paradigm struct
-extracted = Paradigm.Abstraction.extract(graph_instance)
-# extracted == paradigm
+extracted_paradigm = Paradigm.Abstraction.extract(graph)
+# extracted_paradigm == paradigm
 ```

@@ -6,12 +6,11 @@ defmodule ParadigmTest do
     test "embedded metamodel passes invariant check and extracts correctly" do
       paradigm = Paradigm.Canonical.Metamodel.definition()
       paradigm_graph = Paradigm.Abstraction.embed(paradigm)
-
-      assert Paradigm.Conformance.check_graph(paradigm, paradigm_graph) ==
-               %Paradigm.Conformance.Result{issues: []}
-
-      new_paradigm = Paradigm.Abstraction.extract(paradigm_graph)
-      assert paradigm == new_paradigm
+      # Embedded metamodel conforms to itself (in paradigm form or embedded graph form)
+      assert Paradigm.Conformance.conforms?(paradigm_graph, paradigm)
+      assert Paradigm.Conformance.conforms?(paradigm_graph, paradigm_graph)
+      # Round-tripped Paradigm is equal
+      assert paradigm == Paradigm.Abstraction.extract(paradigm_graph)
     end
 
     test "identity transform is applied" do
@@ -33,37 +32,31 @@ defmodule ParadigmTest do
     test "graph instance filesystem adapter is conformant" do
       filesystem_graph = Paradigm.Graph.FilesystemGraph.new(root: ".")
       filesystem_paradigm = Paradigm.Canonical.Filesystem.definition()
-      assert %Paradigm.Conformance.Result{issues: []} = Paradigm.Conformance.check_graph(filesystem_paradigm, filesystem_graph)
+      assert Paradigm.Conformance.conforms?(filesystem_graph, filesystem_paradigm)
     end
 
-    test "bootstrap universe" do
-      bootstrap_universe_graph = Paradigm.Universe.bootstrap()
-      [ metamodel_id ] = Paradigm.Graph.get_all_nodes_of_class(bootstrap_universe_graph, "registered_graph")
-      paradigm = Paradigm.Universe.get_paradigm_for(bootstrap_universe_graph, metamodel_id)
+    test "bootstrap universe contains self-realizing metamodel" do
+      universe = Paradigm.Universe.bootstrap()
+      #The bootstrap has performed the conformance test
+      assert Paradigm.Universe.all_instantiations_conformant?(universe) == true
+      #The metamodel graph has itself as metamodel
+      metamodel_id = Paradigm.Universe.find_by_name(universe, "Metamodel")
+      paradigm = Paradigm.Universe.get_paradigm_for(universe, metamodel_id)
       assert paradigm == Paradigm.Canonical.Metamodel.definition()
     end
 
-    test "universe example" do
-      bootstrap_universe_graph = Paradigm.Universe.bootstrap()
-      metamodel_id = Paradigm.Universe.find_by_name(bootstrap_universe_graph, "Metamodel")
+    test "universe propagates along the identity transform" do
+      universe = Paradigm.Universe.bootstrap()
+      |> Paradigm.Universe.register_transform_by_name(Paradigm.Transform.Identity, "Metamodel", "Metamodel")
+      |> Paradigm.Universe.apply_propagate()
 
-      universe_instance = bootstrap_universe_graph |> Paradigm.Universe.register_transform(Paradigm.Transform.Identity, metamodel_id, metamodel_id)
-      assert Paradigm.Graph.get_node(universe_instance, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"] == nil
-      assert Paradigm.Universe.all_instantiations_conformant?(universe_instance) == false
-      transformed_universe = Paradigm.Universe.apply_propagate(universe_instance)
+      #The identity transform has carried the Metamodel graph to itself
+      [{source, destination}] = Paradigm.Universe.get_transform_pairs(universe)
+      assert source == destination
+      assert source == Paradigm.Universe.find_by_name(universe, "Metamodel")
 
-      #The transform has performed the conformance test:
-      assert Paradigm.Graph.get_node(transformed_universe, "#{metamodel_id}_#{metamodel_id}").data["conformance_result"].issues == []
-      assert Paradigm.Universe.all_instantiations_conformant?(transformed_universe) == true
-
-      #source and target of the executed Identity transform match
-      [transform_instance] = Paradigm.Graph.get_all_nodes_of_class(transformed_universe, "transform_instance")
-      |> Enum.map(&Paradigm.Graph.get_node(transformed_universe, &1))
-      assert transform_instance.data["source"].id == metamodel_id
-      assert transform_instance.data["target"].id == metamodel_id
-
-      universe_paradigm = Paradigm.Canonical.Universe.definition()
-      assert %Paradigm.Conformance.Result{issues: []} = Paradigm.Conformance.check_graph(universe_paradigm, transformed_universe)
+      #External conformance of Universe
+      assert Paradigm.Conformance.conforms?(universe, Paradigm.Canonical.Universe.definition())
     end
 
   end

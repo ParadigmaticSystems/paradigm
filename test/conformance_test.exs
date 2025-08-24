@@ -29,8 +29,7 @@ defmodule Paradigm.ConformanceTest do
                 "testProp" => "value"
               })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph)
+      assert Paradigm.Conformance.conforms?(graph, paradigm)
     end
 
     test "detects invalid class reference" do
@@ -51,7 +50,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, graph)
+               Conformance.check_graph(graph, paradigm)
     end
 
     test "validates inherited properties from superclass" do
@@ -90,8 +89,7 @@ defmodule Paradigm.ConformanceTest do
                 "childProp" => "child_value"
               })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph)
+      assert Paradigm.Conformance.conforms?(graph, paradigm)
 
       # Missing inherited property
       invalid_graph = MapGraph.new()
@@ -109,7 +107,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, invalid_graph)
+               Conformance.check_graph(invalid_graph, paradigm)
     end
 
     test "validates property references to superclass type" do
@@ -158,7 +156,7 @@ defmodule Paradigm.ConformanceTest do
                    node_id: "node2"
                  }
                ]
-             } = Conformance.check_graph(paradigm, graph)
+             } = Conformance.check_graph(graph, paradigm)
     end
 
     test "validates valid reference to correct class" do
@@ -195,8 +193,7 @@ defmodule Paradigm.ConformanceTest do
                  "vehicleRef" => %Ref{id: "node1"}
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph1)
+      assert Paradigm.Conformance.conforms?(graph1, paradigm)
 
       # Test subclass match
       graph2 = MapGraph.new()
@@ -205,8 +202,7 @@ defmodule Paradigm.ConformanceTest do
                  "vehicleRef" => %Ref{id: "node1"}
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph2)
+      assert Paradigm.Conformance.conforms?(graph2, paradigm)
     end
 
     test "detects reference to nonexistent node" do
@@ -245,7 +241,7 @@ defmodule Paradigm.ConformanceTest do
                    node_id: "node1"
                  }
                ]
-             } = Conformance.check_graph(paradigm, graph)
+             } = Conformance.check_graph(graph, paradigm)
     end
 
     test "validates multiple references in collection" do
@@ -277,8 +273,7 @@ defmodule Paradigm.ConformanceTest do
                 "vehicleRefs" => [%Ref{id: "node1"}, %Ref{id: "node2"}]
               })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph)
+      assert Paradigm.Conformance.conforms?(graph, paradigm)
     end
 
     test "validates mixed references and dangling references in collection" do
@@ -318,7 +313,7 @@ defmodule Paradigm.ConformanceTest do
                    node_id: "node2"
                  }
                ]
-             } = Conformance.check_graph(paradigm, graph)
+             } = Conformance.check_graph(graph, paradigm)
     end
 
     test "validates ordered property constraints" do
@@ -346,8 +341,7 @@ defmodule Paradigm.ConformanceTest do
                 "orderedProp" => ["value1", "value2", "value3"]
               })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph)
+      assert Paradigm.Conformance.conforms?(graph, paradigm)
     end
 
     test "validates property cardinality edge cases" do
@@ -389,8 +383,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => ["value1"]
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph1)
+      assert Paradigm.Conformance.conforms?(graph1, paradigm)
 
       # Test optional property
       graph2 = MapGraph.new()
@@ -400,8 +393,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => ["value1"]
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph2)
+      assert Paradigm.Conformance.conforms?(graph2, paradigm)
 
       # Test infinite upper bound
       graph3 = MapGraph.new()
@@ -411,8 +403,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => List.duplicate("value", 100)
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph3)
+      assert Paradigm.Conformance.conforms?(graph3, paradigm)
     end
 
     test "detects non-reference value for reference property" do
@@ -452,7 +443,7 @@ defmodule Paradigm.ConformanceTest do
             node_id: "node1"
           }
         ]
-      } = Conformance.check_graph(paradigm, graph)
+      } = Conformance.check_graph(graph, paradigm)
     end
 
     test "validates composite property constraints" do
@@ -480,8 +471,7 @@ defmodule Paradigm.ConformanceTest do
                 "compositeProp" => [%Ref{id: "ref1"}, %Ref{id: "ref2"}]
               })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph)
+      assert Paradigm.Conformance.conforms?(graph, paradigm)
     end
 
     test "detects missing required properties" do
@@ -513,8 +503,8 @@ defmodule Paradigm.ConformanceTest do
                    node_id: "node1"
                  }
                ]
-             } =
-               Conformance.check_graph(paradigm, graph)
+             } ==
+               Conformance.check_graph(graph, paradigm)
     end
 
     test "detects extra properties" do
@@ -542,7 +532,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, graph)
+               Conformance.check_graph(graph, paradigm)
     end
 
     test "validates property cardinality" do
@@ -580,7 +570,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, graph1)
+               Conformance.check_graph(graph1, paradigm)
 
       # Test too many values
       graph2 = MapGraph.new()
@@ -598,7 +588,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, graph2)
+               Conformance.check_graph(graph2, paradigm)
     end
 
     test "validates enumeration values" do
@@ -629,8 +619,7 @@ defmodule Paradigm.ConformanceTest do
                  "enumProp" => "RED"
                })
 
-      assert %Paradigm.Conformance.Result{issues: []} =
-               Conformance.check_graph(paradigm, graph1)
+      assert Paradigm.Conformance.conforms?(graph1, paradigm)
 
       # Test invalid enum value
       graph2 = MapGraph.new()
@@ -648,7 +637,7 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } =
-               Conformance.check_graph(paradigm, graph2)
+               Conformance.check_graph(graph2, paradigm)
     end
   end
 end

@@ -33,14 +33,23 @@ defmodule Paradigm.Conformance do
     def valid?(%Result{}), do: false
   end
 
-  @spec check_graph(%Paradigm{}, any()) :: Result.t()
-  def check_graph(%Paradigm{} = paradigm, graph) do
+  def conforms?(graph, paradigm) do
+    check_graph(graph, paradigm) == %Paradigm.Conformance.Result{issues: []}
+  end
+
+  @spec check_graph(any(), %Paradigm{} | Graph.t()) :: Result.t()
+  def check_graph(graph, %Paradigm{} = paradigm) do
     issues =
       Paradigm.Graph.get_all_nodes(graph)
       |> Enum.flat_map(&validate_node(&1, paradigm, graph))
 
     %Result{issues: issues}
   end
+
+  def check_graph(graph, paradigm_graph) do
+    check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph))
+  end
+
 
   defp validate_node(node_id, paradigm, graph) do
     with {:ok, node} <- get_node_safe(graph, node_id),

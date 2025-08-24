@@ -11,9 +11,9 @@ defmodule Paradigm.Universe do
     |> String.slice(-5..-1)
   end
 
-  def insert_graph_with_paradigm(universe_graph, graph, name, paradigm_id) do
+  def insert_graph_with_paradigm(universe, graph, name, paradigm_id) do
     id = generate_graph_id(graph)
-    universe_graph
+    universe
     |> Paradigm.Graph.insert_node(
       id,
       "registered_graph",
@@ -29,8 +29,8 @@ defmodule Paradigm.Universe do
        conformance_result: nil})
   end
 
-  def register_transform(universe_graph, module, from, to) do
-    Paradigm.Graph.insert_node(universe_graph,
+  def register_transform(universe, module, from, to) do
+    Paradigm.Graph.insert_node(universe,
       Module.split(module) |> Enum.join("."),
       "transform",
       %{
@@ -42,12 +42,19 @@ defmodule Paradigm.Universe do
     )
   end
 
+  def register_transform_by_name(universe, module, from_name, to_name) do
+    register_transform(universe, module,
+      find_by_name(universe, from_name),
+      find_by_name(universe, to_name))
+  end
+
   def bootstrap(name \\ "universe_model", description \\ "Test universe") do
     metamodel = Paradigm.Canonical.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
     Paradigm.Graph.MapGraph.new(name: name, description: description)
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
+    |> apply_propagate()
   end
 
   def get_paradigm_for(universe, node_id) do
@@ -66,35 +73,42 @@ defmodule Paradigm.Universe do
     end
   end
 
-  def insert_paradigm(universe_graph, paradigm) do
+  def insert_paradigm(universe, paradigm) do
     paradigm_graph = Paradigm.Abstraction.embed(paradigm)
-    metamodel_id = find_by_name(universe_graph, "Metamodel")
+    metamodel_id = find_by_name(universe, "Metamodel")
 
-    universe_graph
+    universe
     |> Paradigm.Universe.insert_graph_with_paradigm(paradigm_graph, paradigm.name, metamodel_id)
   end
 
-  def find_by_name(universe_graph, name) do
-    Paradigm.Graph.get_all_nodes_of_class(universe_graph, "registered_graph")
+  def find_by_name(universe, name) do
+    Paradigm.Graph.get_all_nodes_of_class(universe, "registered_graph")
     |> Enum.find(fn id ->
-      Paradigm.Graph.get_node_data(universe_graph, id, "name", "") == name
+      Paradigm.Graph.get_node_data(universe, id, "name", "") == name
     end)
   end
 
-  def apply_propagate(universe_graph) do
-    {:ok, transformed_universe} = Paradigm.Transform.Propagate.transform(universe_graph, universe_graph, %{})
+  def apply_propagate(universe) do
+    {:ok, transformed_universe} = Paradigm.Transform.Propagate.transform(universe, universe, %{})
     transformed_universe
   end
 
-  def all_instantiations_conformant?(universe_graph) do
-    universe_graph
+  def all_instantiations_conformant?(universe) do
+    universe
     |> Graph.get_all_nodes_of_class("instantiation")
     |> Enum.all?(fn node_id ->
-      case Graph.get_node_data(universe_graph, node_id, "conformance_result", nil) do
+      case Graph.get_node_data(universe, node_id, "conformance_result", nil) do
         nil -> false
         result -> result.issues == []
       end
     end)
+  end
+
+  def get_transform_pairs(universe) do
+    #Returns tuples of source_id, target_id for all transforms that have occured.
+    Paradigm.Graph.get_all_nodes_of_class(universe, "transform_instance")
+    |> Enum.map(&Paradigm.Graph.get_node(universe, &1))
+    |> Enum.map(fn node -> {node.data["source"].id, node.data["target"].id} end)
   end
 
 end

@@ -46,9 +46,8 @@ defmodule Paradigm.Transform.Propagate do
     paradigm_graph_node = Paradigm.Graph.follow_reference(universe, instantiation_node_id, "paradigm")
     instance_graph_node = Paradigm.Graph.follow_reference(universe, instantiation_node_id, "instance")
     paradigm = paradigm_graph_node.data["graph"]
-    |> Paradigm.Abstraction.extract()
     instance_graph = instance_graph_node.data["graph"]
-    Paradigm.Conformance.check_graph(paradigm, instance_graph)
+    Paradigm.Conformance.check_graph(instance_graph, paradigm)
   end
 
   defp apply_transform_if_needed(universe, transform_node_id) do
