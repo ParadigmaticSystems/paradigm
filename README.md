@@ -83,7 +83,7 @@ The `Paradigm.Canonical.Universe` paradigm is a system-level model treating `Par
 * `Paradigm.Universe.bootstrap/0` sets up the canonical metamodel self-realization relationship.
 * `Paradigm.Universe.apply_propagate/1` applies the `Paradigm.Transform.Propagate` transform. This looks for places to apply conformance checks or internal transforms.
 
-So all the embedding, conformance checking and trasnforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
+So all the embedding, conformance checking and transforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
 
 ```elixir
 Paradigm.Universe.bootstrap()
