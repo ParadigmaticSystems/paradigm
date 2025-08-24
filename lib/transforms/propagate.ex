@@ -100,11 +100,8 @@ defmodule Paradigm.Transform.Propagate do
       "errors" => [],
       "warnings" => []
     })
-    |> Paradigm.Graph.insert_node(target_id, "registered_graph",
-    %{
-      graph: result_graph,
-      name: registered_graph.data["name"]
-    })
+    |> Paradigm.Universe.insert_graph_with_paradigm(result_graph, registered_graph.data["name"], transform_node.data["target"].id)
+
   end
 
 end

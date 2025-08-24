@@ -7,8 +7,8 @@ defmodule ParadigmTest do
       paradigm = Paradigm.Canonical.Metamodel.definition()
       paradigm_graph = Paradigm.Abstraction.embed(paradigm)
       # Embedded metamodel conforms to itself (in paradigm form or embedded graph form)
-      assert Paradigm.Conformance.conforms?(paradigm_graph, paradigm)
-      assert Paradigm.Conformance.conforms?(paradigm_graph, paradigm_graph)
+      Paradigm.Conformance.assert_conforms(paradigm_graph, paradigm)
+      Paradigm.Conformance.assert_conforms(paradigm_graph, paradigm_graph)
       # Round-tripped Paradigm is equal
       assert paradigm == Paradigm.Abstraction.extract(paradigm_graph)
     end
@@ -32,7 +32,7 @@ defmodule ParadigmTest do
     test "graph instance filesystem adapter is conformant" do
       filesystem_graph = Paradigm.Graph.FilesystemGraph.new(root: ".")
       filesystem_paradigm = Paradigm.Canonical.Filesystem.definition()
-      assert Paradigm.Conformance.conforms?(filesystem_graph, filesystem_paradigm)
+      Paradigm.Conformance.assert_conforms(filesystem_graph, filesystem_paradigm)
     end
 
     test "bootstrap universe contains self-realizing metamodel" do
@@ -56,7 +56,7 @@ defmodule ParadigmTest do
       assert source == Paradigm.Universe.find_by_name(universe, "Metamodel")
 
       #External conformance of Universe
-      assert Paradigm.Conformance.conforms?(universe, Paradigm.Canonical.Universe.definition())
+      Paradigm.Conformance.assert_conforms(universe, Paradigm.Canonical.Universe.definition())
     end
 
   end

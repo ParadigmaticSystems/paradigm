@@ -33,8 +33,29 @@ defmodule Paradigm.Conformance do
     def valid?(%Result{}), do: false
   end
 
-  def conforms?(graph, paradigm) do
-    check_graph(graph, paradigm) == %Paradigm.Conformance.Result{issues: []}
+  @doc """
+  Asserts that a graph conforms to a paradigm.
+  """
+  def assert_conforms(graph, paradigm) do
+    case check_graph(graph, paradigm) do
+      %Paradigm.Conformance.Result{issues: []} ->
+        :ok
+      %Paradigm.Conformance.Result{issues: issues} ->
+        raise format_error_message(issues)
+    end
+  end
+
+  defp format_error_message(issues) do
+    count = length(issues)
+    formatted = format_issues(issues)
+    "Graph does not conform to paradigm (#{count} issue(s)):\n#{formatted}"
+  end
+
+  defp format_issues(issues) do
+    issues
+    |> Enum.with_index(1)
+    |> Enum.map(fn {issue, index} -> "  #{index}. #{inspect(issue)}" end)
+    |> Enum.join("\n")
   end
 
   @spec check_graph(any(), %Paradigm{} | Graph.t()) :: Result.t()

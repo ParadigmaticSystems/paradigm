@@ -29,7 +29,7 @@ defmodule Paradigm.ConformanceTest do
                 "testProp" => "value"
               })
 
-      assert Paradigm.Conformance.conforms?(graph, paradigm)
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
     end
 
     test "detects invalid class reference" do
@@ -89,7 +89,7 @@ defmodule Paradigm.ConformanceTest do
                 "childProp" => "child_value"
               })
 
-      assert Paradigm.Conformance.conforms?(graph, paradigm)
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
 
       # Missing inherited property
       invalid_graph = MapGraph.new()
@@ -193,7 +193,7 @@ defmodule Paradigm.ConformanceTest do
                  "vehicleRef" => %Ref{id: "node1"}
                })
 
-      assert Paradigm.Conformance.conforms?(graph1, paradigm)
+      Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
       # Test subclass match
       graph2 = MapGraph.new()
@@ -202,7 +202,7 @@ defmodule Paradigm.ConformanceTest do
                  "vehicleRef" => %Ref{id: "node1"}
                })
 
-      assert Paradigm.Conformance.conforms?(graph2, paradigm)
+      Paradigm.Conformance.assert_conforms(graph2, paradigm)
     end
 
     test "detects reference to nonexistent node" do
@@ -273,7 +273,7 @@ defmodule Paradigm.ConformanceTest do
                 "vehicleRefs" => [%Ref{id: "node1"}, %Ref{id: "node2"}]
               })
 
-      assert Paradigm.Conformance.conforms?(graph, paradigm)
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
     end
 
     test "validates mixed references and dangling references in collection" do
@@ -341,7 +341,7 @@ defmodule Paradigm.ConformanceTest do
                 "orderedProp" => ["value1", "value2", "value3"]
               })
 
-      assert Paradigm.Conformance.conforms?(graph, paradigm)
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
     end
 
     test "validates property cardinality edge cases" do
@@ -383,7 +383,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => ["value1"]
                })
 
-      assert Paradigm.Conformance.conforms?(graph1, paradigm)
+      Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
       # Test optional property
       graph2 = MapGraph.new()
@@ -393,7 +393,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => ["value1"]
                })
 
-      assert Paradigm.Conformance.conforms?(graph2, paradigm)
+      Paradigm.Conformance.assert_conforms(graph2, paradigm)
 
       # Test infinite upper bound
       graph3 = MapGraph.new()
@@ -403,7 +403,7 @@ defmodule Paradigm.ConformanceTest do
                  "infiniteProp" => List.duplicate("value", 100)
                })
 
-      assert Paradigm.Conformance.conforms?(graph3, paradigm)
+      Paradigm.Conformance.assert_conforms(graph3, paradigm)
     end
 
     test "detects non-reference value for reference property" do
@@ -471,7 +471,7 @@ defmodule Paradigm.ConformanceTest do
                 "compositeProp" => [%Ref{id: "ref1"}, %Ref{id: "ref2"}]
               })
 
-      assert Paradigm.Conformance.conforms?(graph, paradigm)
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
     end
 
     test "detects missing required properties" do
@@ -619,7 +619,7 @@ defmodule Paradigm.ConformanceTest do
                  "enumProp" => "RED"
                })
 
-      assert Paradigm.Conformance.conforms?(graph1, paradigm)
+      Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
       # Test invalid enum value
       graph2 = MapGraph.new()
