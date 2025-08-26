@@ -32,15 +32,32 @@ defmodule Paradigm.Transform do
 
   @doc "Transform specific nodes by ID"
   def transform_nodes(node_ids, source, target, transform_fn) do
-    Enum.reduce_while(node_ids, {:ok, target}, fn node_id, {:ok, acc} ->
+    node_ids
+    |> Enum.with_index()
+    |> Enum.reduce_while({:ok, target}, fn {node_id, index}, {:ok, acc} ->
       case Paradigm.Graph.get_node(source, node_id) do
         nil ->
           {:halt, {:error, "Node #{node_id} not found"}}
 
         node ->
-          case transform_fn.(node_id, node.data) do
+          context = %{
+            index: index,
+            total_count: length(node_ids),
+            source_graph: source,
+            current_target: acc
+          }
+
+          case call_transform_fn(transform_fn, node_id, node.data, context) do
+            # Single node result
             {:ok, {new_id, new_class, new_data}} ->
               {:cont, {:ok, Paradigm.Graph.insert_node(acc, new_id, new_class, new_data)}}
+
+            # Multiple nodes result - list of {id, class, data} tuples
+            {:ok, node_list} when is_list(node_list) ->
+              case insert_node_list(acc, node_list) do
+                {:ok, updated_acc} -> {:cont, {:ok, updated_acc}}
+                error -> {:halt, error}
+              end
 
             {:skip} ->
               {:cont, {:ok, acc}}
@@ -49,6 +66,25 @@ defmodule Paradigm.Transform do
               {:halt, {:error, reason}}
           end
       end
+    end)
+  end
+
+  defp call_transform_fn(transform_fn, node_id, node_data, context) do
+    case :erlang.fun_info(transform_fn, :arity) do
+      {:arity, 2} -> transform_fn.(node_id, node_data)
+      {:arity, 3} -> transform_fn.(node_id, node_data, context)
+      {:arity, arity} ->
+        {:error, "Unsupported transform function arity: #{arity}. Expected 2 or 3."}
+    end
+  end
+
+  defp insert_node_list(graph, node_list) do
+    Enum.reduce_while(node_list, {:ok, graph}, fn
+      {id, class, data}, {:ok, acc} ->
+        {:cont, {:ok, Paradigm.Graph.insert_node(acc, id, class, data)}}
+
+      invalid, _acc ->
+        {:halt, {:error, "Invalid node tuple: #{inspect(invalid)}. Expected {id, class, data}"}}
     end)
   end
 end
