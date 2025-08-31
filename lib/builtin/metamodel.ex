@@ -1,4 +1,4 @@
-defmodule Paradigm.Canonical.Metamodel do
+defmodule Paradigm.Builtin.Metamodel do
   @moduledoc """
   The canonical self-model of the Paradigm structure.
   """

@@ -39,7 +39,7 @@ defmodule Paradigm.Conformance do
   def assert_conforms(graph, paradigm) do
     case check_graph(graph, paradigm) do
       %Paradigm.Conformance.Result{issues: []} ->
-        :ok
+        graph
       %Paradigm.Conformance.Result{issues: issues} ->
         raise format_error_message(issues)
     end

@@ -49,7 +49,7 @@ defmodule Paradigm.Universe do
   end
 
   def bootstrap(name \\ "universe_model", description \\ "Test universe") do
-    metamodel = Paradigm.Canonical.Metamodel.definition()
+    metamodel = Paradigm.Builtin.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
     Paradigm.Graph.MapGraph.new(name: name, description: description)

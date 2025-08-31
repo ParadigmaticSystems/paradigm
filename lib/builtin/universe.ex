@@ -1,4 +1,4 @@
-defmodule Paradigm.Canonical.Universe do
+defmodule Paradigm.Builtin.Universe do
   @moduledoc """
   The paradigm system model
   """

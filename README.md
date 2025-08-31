@@ -32,7 +32,7 @@ This provides an ergonomic core for next-generation MBSE tooling.
 ## Paradigm Operations
 For these examples we'll use the provided Metamodel paradigm:
 ```elixir
-metamodel_paradigm = Paradigm.Canonical.Metamodel.definition()
+metamodel_paradigm = Paradigm.Builtin.Metamodel.definition()
 ```
 ### Abstraction
 `Paradigm.Abstraction` allows movement between paradigm definitions and their graph representations.
@@ -78,7 +78,7 @@ embedded_metamodel == transformed_graph
 ```
 
 ## Universe Paradigm
-The `Paradigm.Canonical.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
+The `Paradigm.Builtin.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
 
 * `Paradigm.Universe.bootstrap/0` sets up the canonical metamodel self-realization relationship.
 * `Paradigm.Universe.apply_propagate/1` applies the `Paradigm.Transform.Propagate` transform. This looks for places to apply conformance checks or internal transforms.
@@ -89,7 +89,7 @@ So all the embedding, conformance checking and transforms above are achieved mor
 Paradigm.Universe.bootstrap()
 |> Paradigm.Universe.register_transform_by_name(Paradigm.Transform.Identity, "Metamodel", "Metamodel")
 |> Paradigm.Universe.apply_propagate()
-|> Paradigm.Conformance.conforms?(Paradigm.Canonical.Universe.definition())
+|> Paradigm.Conformance.conforms?(Paradigm.Builtin.Universe.definition())
 ```
 
 ## Installation
@@ -126,7 +126,7 @@ Here's a basic example using the canonical metamodel:
 
 ```elixir
 # Get the metamodel paradigm
-paradigm = Paradigm.Canonical.Metamodel.definition()
+paradigm = Paradigm.Builtin.Metamodel.definition()
 
 # Embed it into a graph for manipulation
 graph = Paradigm.Abstraction.embed(paradigm)

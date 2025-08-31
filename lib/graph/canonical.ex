@@ -1,6 +1,6 @@
 defmodule Paradigm.Graph.Canonical do
   @moduledoc """
-  Converts graph nodes into canonical Elixir structs with expanded references.
+  Converts graphs into canonical Elixir structs, and vice versa.
   """
 
   alias Paradigm.Graph.Node
@@ -30,6 +30,74 @@ defmodule Paradigm.Graph.Canonical do
           build_struct(graph, node, new_visited)
         end
     end
+  end
+
+  @doc """
+  Converts an Elixir struct into graph nodes using the Graph protocol.
+
+  - Uses the struct's module name as the class_id
+  - Converts nested structs into references
+  - Inserts all nodes into the graph
+  """
+  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id()) :: Paradigm.Graph.t()
+  def struct_to_graph(graph, struct_data, node_id) do
+    struct_to_graph(graph, struct_data, node_id, MapSet.new())
+  end
+
+  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id(), MapSet.t()) :: Paradigm.Graph.t()
+  defp struct_to_graph(graph, struct_data, node_id, visited) do
+    if MapSet.member?(visited, node_id) do
+      graph
+    else
+      new_visited = MapSet.put(visited, node_id)
+
+      class_id = struct_data.__struct__
+      {converted_data, updated_graph} = convert_struct_data(graph, struct_data, new_visited)
+
+      Paradigm.Graph.insert_node(updated_graph, node_id, class_id, converted_data)
+    end
+  end
+
+  defp convert_struct_data(graph, struct_data, visited) do
+    struct_map = Map.from_struct(struct_data)
+
+    Enum.reduce(struct_map, {%{}, graph}, fn {key, value}, {acc_data, acc_graph} ->
+      {converted_value, updated_graph} = convert_value(acc_graph, value, visited)
+      {Map.put(acc_data, key, converted_value), updated_graph}
+    end)
+  end
+
+  defp convert_value(graph, value, visited) when is_struct(value) do
+    # Generate a unique node_id for nested structs
+    nested_node_id = generate_node_id(value)
+    updated_graph = struct_to_graph(graph, value, nested_node_id, visited)
+    {%Node.Ref{id: nested_node_id}, updated_graph}
+  end
+
+  defp convert_value(graph, value, visited) when is_list(value) do
+    Enum.reduce(value, {[], graph}, fn item, {acc_list, acc_graph} ->
+      {converted_item, updated_graph} = convert_value(acc_graph, item, visited)
+      {[converted_item | acc_list], updated_graph}
+    end)
+    |> then(fn {list, graph} -> {Enum.reverse(list), graph} end)
+  end
+
+  defp convert_value(graph, value, visited) when is_map(value) do
+    Enum.reduce(value, {%{}, graph}, fn {k, v}, {acc_map, acc_graph} ->
+      {converted_value, updated_graph} = convert_value(acc_graph, v, visited)
+      {Map.put(acc_map, k, converted_value), updated_graph}
+    end)
+  end
+
+  defp convert_value(graph, value, _visited) do
+    # Primitive values pass through unchanged
+    {value, graph}
+  end
+
+  defp generate_node_id(struct_data) do
+    # Simple approach: use module name + hash of struct content
+    content_hash = :erlang.phash2(struct_data)
+    "#{struct_data.__struct__}_#{content_hash}"
   end
 
   defp build_struct(graph, %Node{class: class, data: data}, visited) do

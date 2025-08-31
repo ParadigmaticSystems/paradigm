@@ -1,10 +1,10 @@
-defmodule ParadigmTest do
+defmodule BuiltinsTest do
   use ExUnit.Case
   doctest Paradigm
 
-  describe "high-level paradigm structures" do
+  describe "builtin paradigm structures" do
     test "embedded metamodel passes invariant check and extracts correctly" do
-      paradigm = Paradigm.Canonical.Metamodel.definition()
+      paradigm = Paradigm.Builtin.Metamodel.definition()
       paradigm_graph = Paradigm.Abstraction.embed(paradigm)
       # Embedded metamodel conforms to itself (in paradigm form or embedded graph form)
       Paradigm.Conformance.assert_conforms(paradigm_graph, paradigm)
@@ -14,7 +14,7 @@ defmodule ParadigmTest do
     end
 
     test "identity transform is applied" do
-      paradigm = Paradigm.Canonical.Metamodel.definition()
+      paradigm = Paradigm.Builtin.Metamodel.definition()
       graph = Paradigm.Abstraction.embed(paradigm)
 
       {:ok, transformed_graph} =
@@ -26,12 +26,12 @@ defmodule ParadigmTest do
     test "filesystem adapter counts test files" do
       filesystem_graph = Paradigm.Graph.FilesystemGraph.new(root: "./test")
       nodes = Paradigm.Graph.get_all_nodes(filesystem_graph)
-      assert length(nodes) == 4
+      assert length(nodes) == 5
     end
 
     test "graph instance filesystem adapter is conformant" do
       filesystem_graph = Paradigm.Graph.FilesystemGraph.new(root: ".")
-      filesystem_paradigm = Paradigm.Canonical.Filesystem.definition()
+      filesystem_paradigm = Paradigm.Builtin.Filesystem.definition()
       Paradigm.Conformance.assert_conforms(filesystem_graph, filesystem_paradigm)
     end
 
@@ -42,7 +42,7 @@ defmodule ParadigmTest do
       #The metamodel graph has itself as metamodel
       metamodel_id = Paradigm.Universe.find_by_name(universe, "Metamodel")
       paradigm = Paradigm.Universe.get_paradigm_for(universe, metamodel_id)
-      assert paradigm == Paradigm.Canonical.Metamodel.definition()
+      assert paradigm == Paradigm.Builtin.Metamodel.definition()
     end
 
     test "universe propagates along the identity transform" do
@@ -56,7 +56,7 @@ defmodule ParadigmTest do
       assert source == Paradigm.Universe.find_by_name(universe, "Metamodel")
 
       #External conformance of Universe
-      Paradigm.Conformance.assert_conforms(universe, Paradigm.Canonical.Universe.definition())
+      Paradigm.Conformance.assert_conforms(universe, Paradigm.Builtin.Universe.definition())
     end
 
   end

@@ -1,4 +1,4 @@
-defmodule Paradigm.Canonical.Filesystem do
+defmodule Paradigm.Builtin.Filesystem do
   @moduledoc """
   The filesystem model.
   """
