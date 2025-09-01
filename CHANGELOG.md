@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `Graph.Canonical` module with tests for changing from Graphs to Elixir structs and back.
+- Helper functions in the `Universe` and `Conformance` modules
+- Introduced transform driver `Paradigm.Transform/apply_class_transform/3` abstracting a common pattern
+### Changed
+- Relabeled built-in Paradigms as "Builtin" rather than "Canonical" to free up the term.
+- Introduced explicit `Paradigm.Graph.Node.Ref` struct instead of using raw pointers.
+### Fixed
+- The MapGraph normalizes property keys to strings to avoid conformance issues.
 
 ## [0.2.0] - 2025-08-11
 

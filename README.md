@@ -28,6 +28,7 @@ This provides an ergonomic core for next-generation MBSE tooling.
 - **`Paradigm.Graph.Node`** - Standardized form for individual entity instances
 - **`Paradigm.Graph.MapGraph`** - An in-memory graph implementation
 - **`Paradigm.Graph.FilesystemGraph`** - Provides folder and file nodes from local storage
+- **`Paradigm.Graph.Canonical`** - Provides methods for switching between Elixir structs and Graphs.
 
 ## Paradigm Operations
 For these examples we'll use the provided Metamodel paradigm:
@@ -80,7 +81,7 @@ embedded_metamodel == transformed_graph
 ## Universe Paradigm
 The `Paradigm.Builtin.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
 
-* `Paradigm.Universe.bootstrap/0` sets up the canonical metamodel self-realization relationship.
+* `Paradigm.Universe.bootstrap/0` sets up the builtin metamodel self-realization relationship.
 * `Paradigm.Universe.apply_propagate/1` applies the `Paradigm.Transform.Propagate` transform. This looks for places to apply conformance checks or internal transforms.
 
 So all the embedding, conformance checking and transforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
@@ -122,7 +123,7 @@ mix deps.get
 
 ## Quick Start
 
-Here's a basic example using the canonical metamodel:
+Here's a basic example using the builtin metamodel:
 
 ```elixir
 # Get the metamodel paradigm

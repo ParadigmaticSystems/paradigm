@@ -39,7 +39,7 @@ defmodule Paradigm.MixProject do
     [
       name: "paradigm",
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/roriholm/paradigm"},
+      links: %{"GitHub" => "https://github.com/ParadigmaticSystems/paradigm"},
       maintainers: ["R. Riley Holmes"],
       files: ~w(lib assets .formatter.exs mix.exs README.md LICENSE),
       keywords: ["modeling", "metamodel", "graph", "abstraction", "integration"]
