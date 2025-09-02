@@ -3,20 +3,11 @@ defmodule Paradigm.Graph.Node do
   A standardized node structure to be targeted by graph data adapters.
   """
 
-  defmodule Ref do
-    @moduledoc """
-    A reference to another node in the graph.
-    """
-    @type t :: %__MODULE__{
-      id: Paradigm.id()
-    }
-
-    defstruct [:id]
-  end
-
   @type t :: %__MODULE__{
+          id: Paradigm.id(),
           class: Paradigm.id(),
-          data: map()
+          data: map(),
+          owned_by: Paradigm.id() | nil
         }
-  defstruct [:class, :data]
+  defstruct [:id, :class, :data, owned_by: nil]
 end

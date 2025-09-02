@@ -26,3 +26,4 @@ paradigm-*.tar
 /result/
 /.nix-mix/
 /.nix-hex/
+/.expert/

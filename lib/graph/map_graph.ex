@@ -31,30 +31,19 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   end
 
   @impl true
-  def insert_node(%{nodes: graph} = map_graph, node_id, class, data \\ %{}) do
+  def insert_node(%{nodes: graph} = map_graph, %Node{id: id, data: data} = node) do
     normalized_data = normalize_keys_to_strings(data)
-    new_graph = Map.put(graph, node_id, %Node{class: class, data: normalized_data})
-    %{map_graph | nodes: new_graph}
-  end
-
-  @impl true
-  def insert_nodes(%{nodes: graph} = map_graph, nodes) when is_map(nodes) do
-    normalized_nodes =
-      nodes
-      |> Enum.map(fn {id, %Node{class: class, data: data}} ->
-        {id, %Node{class: class, data: normalize_keys_to_strings(data)}}
-      end)
-      |> Map.new()
-
-    new_graph = Map.merge(graph, normalized_nodes)
+    normalized_node = %{node | data: normalized_data}
+    new_graph = Map.put(graph, id, normalized_node)
     %{map_graph | nodes: new_graph}
   end
 
   @impl true
   def insert_nodes(%{nodes: graph} = map_graph, nodes) when is_list(nodes) do
-    new_graph = Enum.reduce(nodes, graph, fn {id, %Node{class: class, data: data}}, acc ->
+    new_graph = Enum.reduce(nodes, graph, fn %Node{id: id, data: data} = node, acc ->
       normalized_data = normalize_keys_to_strings(data)
-      Map.put(acc, id, %Node{class: class, data: normalized_data})
+      normalized_node = %{node | data: normalized_data}
+      Map.put(acc, id, normalized_node)
     end)
     %{map_graph | nodes: new_graph}
   end

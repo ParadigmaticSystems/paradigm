@@ -4,6 +4,7 @@ defmodule Paradigm.Universe do
   """
 
   alias Paradigm.Graph
+  alias Paradigm.Graph.Node
   alias Paradigm.Graph.Node.Ref
 
   def generate_graph_id(graph) do
@@ -13,33 +14,46 @@ defmodule Paradigm.Universe do
 
   def insert_graph_with_paradigm(universe, graph, name, paradigm_id) do
     id = generate_graph_id(graph)
-    universe
-    |> Paradigm.Graph.insert_node(
-      id,
-      "registered_graph",
-      %{
+
+    registered_graph_node = %Node{
+      id: id,
+      class: "registered_graph",
+      data: %{
         graph: graph,
-        name: name})
-    |> Paradigm.Graph.insert_node(
-     id <> "_" <> paradigm_id,
-     "instantiation",
-     %{
-       paradigm: %Ref{id: paradigm_id},
-       instance: %Ref{id: id},
-       conformance_result: nil})
+        name: name
+      }
+    }
+
+    instantiation_node = %Node{
+      id: id <> "_" <> paradigm_id,
+      class: "instantiation",
+      data: %{
+        paradigm: %Ref{id: paradigm_id},
+        instance: %Ref{id: id},
+        conformance_result: nil
+      }
+    }
+
+    universe
+    |> Paradigm.Graph.insert_node(registered_graph_node)
+    |> Paradigm.Graph.insert_node(instantiation_node)
   end
 
   def register_transform(universe, module, from, to) do
-    Paradigm.Graph.insert_node(universe,
-      Module.split(module) |> Enum.join("."),
-      "transform",
-      %{
-      name: Module.split(module) |> List.last(),
-      module: module,
-      source: %Ref{id: from},
-      target: %Ref{id: to}
+    node_id = Module.split(module) |> Enum.join(".")
+
+    transform_node = %Node{
+      id: node_id,
+      class: "transform",
+      data: %{
+        name: Module.split(module) |> List.last(),
+        module: module,
+        source: %Ref{id: from},
+        target: %Ref{id: to}
       }
-    )
+    }
+
+    Paradigm.Graph.insert_node(universe, transform_node)
   end
 
   def register_transform_by_name(universe, module, from_name, to_name) do

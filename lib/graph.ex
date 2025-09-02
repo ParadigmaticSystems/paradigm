@@ -19,10 +19,10 @@ defprotocol Paradigm.Graph do
   @spec get_all_nodes_of_class(t(), class_id | [class_id]) :: [node_id]
   def get_all_nodes_of_class(data, class_id)
 
-  @spec insert_node(t(), node_id, class_id, map()) :: t()
-  def insert_node(data, node_id, class_id, attrs)
+  @spec insert_node(t(), Paradigm.Graph.Node.t()) :: t()
+  def insert_node(data, node)
 
-  @spec insert_nodes(t(), map() | list()) :: t()
+  @spec insert_nodes(t(), [Paradigm.Graph.Node.t()]) :: t()
   def insert_nodes(data, nodes)
 
   @spec get_node_data(t(), node_id, any(), any()) :: any()

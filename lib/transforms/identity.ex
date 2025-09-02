@@ -11,7 +11,7 @@ defmodule Paradigm.Transform.Identity do
     |> Enum.reduce({:ok, target_graph}, fn node_id, {:ok, acc} ->
       case Paradigm.Graph.get_node(source_graph, node_id) do
         nil -> {:error, "Node #{node_id} not found"}
-        node -> {:ok, Paradigm.Graph.insert_node(acc, node_id, node.class, node.data)}
+        node -> {:ok, Paradigm.Graph.insert_node(acc, node)}
       end
     end)
   end

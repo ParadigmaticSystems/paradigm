@@ -54,7 +54,13 @@ defmodule Paradigm.Graph.Canonical do
       class_id = struct_data.__struct__
       {converted_data, updated_graph} = convert_struct_data(graph, struct_data, new_visited)
 
-      Paradigm.Graph.insert_node(updated_graph, node_id, class_id, converted_data)
+      node = %Node{
+        id: node_id,
+        class: class_id,
+        data: converted_data
+      }
+
+      Paradigm.Graph.insert_node(updated_graph, node)
     end
   end
 

@@ -15,7 +15,9 @@ defmodule Paradigm.Conformance do
               | :references_missing_node
               | :references_wrong_class
               | :invalid_enum_value
-              | :expected_reference,
+              | :expected_reference
+              | :composite_primitive_type
+              | :multiple_composite_owners,
             node_id: Paradigm.id(),
             property: String.t() | nil,
             details: map() | nil
@@ -63,6 +65,7 @@ defmodule Paradigm.Conformance do
     issues =
       Paradigm.Graph.get_all_nodes(graph)
       |> Enum.flat_map(&validate_node(&1, paradigm, graph))
+      |> Kernel.++(validate_composite_ownership_exclusivity(graph, paradigm))
 
     %Result{issues: issues}
   end
@@ -133,7 +136,8 @@ defmodule Paradigm.Conformance do
     [
       validate_cardinality(node_id, property, value),
       validate_references(node_id, property, value, paradigm, graph),
-      validate_enum_value(node_id, property, value, paradigm)
+      validate_enum_value(node_id, property, value, paradigm),
+      validate_composite_property(node_id, property, value, paradigm)
     ]
     |> List.flatten()
   end
@@ -259,6 +263,69 @@ defmodule Paradigm.Conformance do
     end
   end
 
+  defp validate_composite_property(node_id, property, _value, paradigm) do
+    if property.is_composite and is_primitive_type?(property.type, paradigm) do
+      [
+        %Issue{
+          kind: :composite_primitive_type,
+          node_id: node_id,
+          property: property.name,
+          details: %{type: property.type}
+        }
+      ]
+    else
+      []
+    end
+  end
+
+  defp validate_composite_ownership_exclusivity(graph, paradigm) do
+    # Build a map of referenced node IDs to their composite owners
+    composite_owners =
+      Paradigm.Graph.get_all_nodes(graph)
+      |> Enum.reduce(%{}, fn node_id, acc ->
+        case Paradigm.Graph.get_node(graph, node_id) do
+          nil -> acc
+          node ->
+            Enum.reduce(node.data, acc, fn {property_name, value}, inner_acc ->
+              collect_composite_references(node_id, property_name, value, paradigm, inner_acc)
+            end)
+        end
+      end)
+
+    # Find nodes with multiple composite owners
+    composite_owners
+    |> Enum.filter(fn {_referenced_id, owners} -> length(owners) > 1 end)
+    |> Enum.flat_map(fn {referenced_id, owners} ->
+      # Create issues for all owners except the first one
+      [_first_owner | other_owners] = owners
+
+      Enum.map(other_owners, fn {owner_node_id, property_name, first_owner_id} ->
+        %Issue{
+          kind: :multiple_composite_owners,
+          node_id: owner_node_id,
+          property: property_name,
+          details: %{referenced_id: referenced_id, other_owner: first_owner_id}
+        }
+      end)
+    end)
+  end
+
+  defp collect_composite_references(owner_node_id, property_name, value, paradigm, acc) do
+    case Map.get(paradigm.properties, property_name) do
+      %{is_composite: true} = _property ->
+        refs = extract_refs(value)
+
+        Enum.reduce(refs, acc, fn %Ref{id: referenced_id}, inner_acc ->
+          Map.update(inner_acc, referenced_id, [{owner_node_id, property_name, owner_node_id}], fn existing_owners ->
+            [{owner_node_id, property_name, hd(existing_owners) |> elem(2)} | existing_owners]
+          end)
+        end)
+
+      _ ->
+        acc
+    end
+  end
+
   # Helper functions
   defp get_node_safe(graph, node_id) do
     case Paradigm.Graph.get_node(graph, node_id) do
@@ -319,6 +386,10 @@ defmodule Paradigm.Conformance do
 
   defp is_enum_property?(property, paradigm) do
     Map.has_key?(paradigm.enumerations, property.type)
+  end
+
+  defp is_primitive_type?(type, paradigm) do
+    Map.has_key?(paradigm.primitive_types, type)
   end
 
   defp valid_class_reference?(actual_class, expected_type, paradigm) do

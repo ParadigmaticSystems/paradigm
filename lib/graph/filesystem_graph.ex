@@ -45,13 +45,17 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     case File.stat(full_path) do
       {:ok, %File.Stat{type: :regular}} ->
         %Node{
+          id: node_id,
           class: "file",
-          data: build_file_data(full_path, root_path)
+          data: build_file_data(full_path, root_path),
+          owned_by: nil
         }
       {:ok, %File.Stat{type: :directory}} ->
         %Node{
+          id: node_id,
           class: "folder",
-          data: build_folder_data(full_path, root_path)
+          data: build_folder_data(full_path, root_path),
+          owned_by: nil
         }
       {:error, _} -> nil
     end
@@ -74,7 +78,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   @impl true
-  def insert_node(%{root: root_path} = fs_graph, node_id, class_id, node_data) do
+  def insert_node(%{root: root_path} = fs_graph, %Node{id: node_id, class: class_id, data: node_data}) do
     full_path = resolve_path(root_path, node_id)
 
     case class_id do
@@ -92,16 +96,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   @impl true
-  def insert_nodes(fs_graph, nodes) when is_map(nodes) do
-    Enum.reduce(nodes, fs_graph, fn {node_id, %Node{class: class_id, data: node_data}}, acc ->
-      insert_node(acc, node_id, class_id, node_data)
-    end)
-  end
-
-  @impl true
   def insert_nodes(fs_graph, nodes) when is_list(nodes) do
-    Enum.reduce(nodes, fs_graph, fn {node_id, %Node{class: class_id, data: node_data}}, acc ->
-      insert_node(acc, node_id, class_id, node_data)
+    Enum.reduce(nodes, fs_graph, fn node, acc ->
+      insert_node(acc, node)
     end)
   end
 
@@ -202,7 +199,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
 
     parent_path = Path.dirname(full_path)
     parent_ref = if parent_path != full_path do
-      %Node.Ref{id: make_relative(root_path, parent_path)}
+      %Node.Ref{id: make_relative(root_path, parent_path), composite: false}
     else
       nil
     end
@@ -220,14 +217,14 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
       {:ok, entries} ->
         Enum.map(entries, fn entry ->
           child_path = Path.join(full_path, entry)
-          %Node.Ref{id: make_relative(root_path, child_path)}
+          %Node.Ref{id: make_relative(root_path, child_path), composite: false}
         end)
       {:error, _} -> []
     end
 
     parent_path = Path.dirname(full_path)
     parent_ref = if parent_path != full_path do
-      %Node.Ref{id: make_relative(root_path, parent_path)}
+      %Node.Ref{id: make_relative(root_path, parent_path), composite: false}
     else
       nil
     end

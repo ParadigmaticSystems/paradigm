@@ -49,10 +49,10 @@ defmodule Paradigm.Transform do
 
           case call_transform_fn(transform_fn, node_id, node.data, context) do
             # Single node result
-            {:ok, {new_id, new_class, new_data}} ->
-              {:cont, {:ok, Paradigm.Graph.insert_node(acc, new_id, new_class, new_data)}}
+            {:ok, %Paradigm.Graph.Node{} = new_node} ->
+              {:cont, {:ok, Paradigm.Graph.insert_node(acc, new_node)}}
 
-            # Multiple nodes result - list of {id, class, data} tuples
+            # Multiple nodes result - list of Node structs
             {:ok, node_list} when is_list(node_list) ->
               case insert_node_list(acc, node_list) do
                 {:ok, updated_acc} -> {:cont, {:ok, updated_acc}}
@@ -80,11 +80,11 @@ defmodule Paradigm.Transform do
 
   defp insert_node_list(graph, node_list) do
     Enum.reduce_while(node_list, {:ok, graph}, fn
-      {id, class, data}, {:ok, acc} ->
-        {:cont, {:ok, Paradigm.Graph.insert_node(acc, id, class, data)}}
+      %Paradigm.Graph.Node{} = node, {:ok, acc} ->
+        {:cont, {:ok, Paradigm.Graph.insert_node(acc, node)}}
 
       invalid, _acc ->
-        {:halt, {:error, "Invalid node tuple: #{inspect(invalid)}. Expected {id, class, data}"}}
+        {:halt, {:error, "Invalid node: #{inspect(invalid)}. Expected %Paradigm.Graph.Node{}"}}
     end)
   end
 end

@@ -19,7 +19,7 @@ defmodule CanonicalTest do
   describe "to_struct/2" do
     test "converts a simple node to struct" do
       graph = MapGraph.new()
-      |> Paradigm.Graph.insert_node("person1", Person, %{"name" => "John", "age" => 30})
+      |> Paradigm.Graph.insert_node(%Node{id: "person1", class: Person, data: %{"name" => "John", "age" => 30}})
 
       result = Canonical.to_struct(graph, "person1")
 
@@ -37,8 +37,8 @@ defmodule CanonicalTest do
     test "expands references to other nodes" do
 
       graph = MapGraph.new()
-      |> Paradigm.Graph.insert_node("address1", Address, %{"street" => "123 Main St", "city" => "Springfield", "state" => "IL"})
-      |> Paradigm.Graph.insert_node("person1", Person, %{"name" => "John", "age" => 30, "address" => %Node.Ref{id: "address1"}})
+      |> Paradigm.Graph.insert_node(%Node{id: "address1", class: Address, data: %{"street" => "123 Main St", "city" => "Springfield", "state" => "IL"}})
+      |> Paradigm.Graph.insert_node(%Node{id: "person1", class: Person, data: %{"name" => "John", "age" => 30, "address" => %Node.Ref{id: "address1"}}})
 
       result = Canonical.to_struct(graph, "person1")
 
@@ -52,8 +52,8 @@ defmodule CanonicalTest do
     test "handles cycles by returning cycle marker" do
       # Create a cycle: person -> company -> person
       graph = MapGraph.new()
-      |> Paradigm.Graph.insert_node("person1", Person, %{"name" => "John", "company" => %Node.Ref{id: "company1"}})
-      |> Paradigm.Graph.insert_node("company1", Company, %{"name" => "ACME Corp", "ceo" => %Node.Ref{id: "person1"}})
+      |> Paradigm.Graph.insert_node(%Node{id: "person1", class: Person, data: %{"name" => "John", "company" => %Node.Ref{id: "company1"}}})
+      |> Paradigm.Graph.insert_node(%Node{id: "company1", class: Company, data: %{"name" => "ACME Corp", "ceo" => %Node.Ref{id: "person1"}}})
 
       result = Canonical.to_struct(graph, "person1")
 
@@ -66,12 +66,12 @@ defmodule CanonicalTest do
 
     test "handles references in lists" do
       graph = MapGraph.new()
-      |> Paradigm.Graph.insert_node("person1", Person, %{"name" => "John", "age" => 30})
-      |> Paradigm.Graph.insert_node("person2", Person, %{"name" => "Jane", "age" => 25})
-      |> Paradigm.Graph.insert_node("company1", Company, %{
+      |> Paradigm.Graph.insert_node(%Node{id: "person1", class: Person, data: %{"name" => "John", "age" => 30}})
+      |> Paradigm.Graph.insert_node(%Node{id: "person2", class: Person, data: %{"name" => "Jane", "age" => 25}})
+      |> Paradigm.Graph.insert_node(%Node{id: "company1", class: Company, data: %{
         "name" => "ACME Corp",
         "employees" => [%Node.Ref{id: "person1"}, %Node.Ref{id: "person2"}]
-      })
+      }})
 
       result = Canonical.to_struct(graph, "company1")
 
@@ -83,7 +83,7 @@ defmodule CanonicalTest do
 
     test "returns raw data when struct module doesn't exist" do
       graph = MapGraph.new()
-      |> Paradigm.Graph.insert_node("unknown1", NonExistentModule, %{"foo" => "bar"})
+      |> Paradigm.Graph.insert_node(%Node{id: "unknown1", class: NonExistentModule, data: %{"foo" => "bar"}})
 
       result = Canonical.to_struct(graph, "unknown1")
 
@@ -99,7 +99,7 @@ defmodule CanonicalTest do
       result = Canonical.struct_to_graph(graph, person, "person1")
 
       node = Paradigm.Graph.get_node(result, "person1")
-      assert %Node{class: Person, data: %{"name" => "John", "age" => 30, "address" => nil, "company" => nil}} = node
+      assert %Node{id: "person1", class: Person, data: %{"name" => "John", "age" => 30, "address" => nil, "company" => nil}} = node
     end
 
     test "converts nested structs to references" do
@@ -110,13 +110,13 @@ defmodule CanonicalTest do
       result = Canonical.struct_to_graph(graph, person, "person1")
 
       person_node = Paradigm.Graph.get_node(result, "person1")
-      assert %Node{class: Person, data: person_data} = person_node
+      assert %Node{id: "person1", class: Person, data: person_data} = person_node
       assert person_data["name"] == "John"
       assert person_data["age"] == 30
       assert %Node.Ref{id: address_id} = person_data["address"]
 
       address_node = Paradigm.Graph.get_node(result, address_id)
-      assert %Node{class: Address, data: address_data} = address_node
+      assert %Node{id: ^address_id, class: Address, data: address_data} = address_node
       assert address_data["street"] == "123 Main St"
       assert address_data["city"] == "Springfield"
       assert address_data["state"] == "IL"
@@ -131,7 +131,7 @@ defmodule CanonicalTest do
       result = Canonical.struct_to_graph(graph, company, "company1")
 
       company_node = Paradigm.Graph.get_node(result, "company1")
-      assert %Node{class: Company, data: company_data} = company_node
+      assert %Node{id: "company1", class: Company, data: company_data} = company_node
       assert company_data["name"] == "ACME Corp"
 
       employees = company_data["employees"]
@@ -142,7 +142,7 @@ defmodule CanonicalTest do
       # Check that employee nodes were created
       Enum.each(employees, fn %Node.Ref{id: emp_id} ->
         emp_node = Paradigm.Graph.get_node(result, emp_id)
-        assert %Node{class: Person} = emp_node
+        assert %Node{id: ^emp_id, class: Person} = emp_node
       end)
     end
 

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced transform driver `Paradigm.Transform/apply_class_transform/3` abstracting a common pattern
 ### Changed
 - Relabeled built-in Paradigms as "Builtin" rather than "Canonical" to free up the term.
+- Extended `Paradigm.Graph.Node` to internalize node id and capture is_composite semantics.
+- Simplified and changed the signature of the `Paradigm.Graph.insert_node/2` protocol callback.
 - Introduced explicit `Paradigm.Graph.Node.Ref` struct instead of using raw pointers.
 ### Fixed
 - The MapGraph normalizes property keys to strings to avoid conformance issues.

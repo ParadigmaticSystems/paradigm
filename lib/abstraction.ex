@@ -3,6 +3,7 @@ defmodule Paradigm.Abstraction do
   Functions for moving between Paradigm structs and corresponding graph data.
   """
 
+  alias Paradigm.Graph.Node
   alias Paradigm.Graph.Node.Ref
 
   @doc """
@@ -25,7 +26,13 @@ defmodule Paradigm.Abstraction do
         "name" => primitive_type.name
       }
 
-      Paradigm.Graph.insert_node(acc, id, "primitive_type", data)
+      node = %Node{
+        id: id,
+        class: "primitive_type",
+        data: data
+      }
+
+      Paradigm.Graph.insert_node(acc, node)
     end)
   end
 
@@ -34,11 +41,17 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => package.name,
         "uri" => package.uri,
-        "nested_packages" => Enum.map(package.nested_packages || [], &%Ref{id: &1}),
-        "owned_types" => Enum.map(package.owned_types || [], &%Ref{id: &1})
+        "nested_packages" => Enum.map(package.nested_packages || [], &%Ref{id: &1, composite: true}),
+        "owned_types" => Enum.map(package.owned_types || [], &%Ref{id: &1, composite: true})
       }
 
-      Paradigm.Graph.insert_node(acc, id, "package", data)
+      node = %Node{
+        id: id,
+        class: "package",
+        data: data
+      }
+
+      Paradigm.Graph.insert_node(acc, node)
     end)
   end
 
@@ -47,11 +60,17 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => class.name,
         "is_abstract" => class.is_abstract,
-        "owned_attributes" => Enum.map(class.owned_attributes || [], &%Ref{id: &1}),
+        "owned_attributes" => Enum.map(class.owned_attributes || [], &%Ref{id: &1, composite: true}),
         "super_classes" => Enum.map(class.super_classes || [], &%Ref{id: &1})
       }
 
-      Paradigm.Graph.insert_node(acc, id, "class", data)
+      node = %Node{
+        id: id,
+        class: "class",
+        data: data
+      }
+
+      Paradigm.Graph.insert_node(acc, node)
     end)
   end
 
@@ -62,7 +81,13 @@ defmodule Paradigm.Abstraction do
         "literals" => enum.literals
       }
 
-      Paradigm.Graph.insert_node(acc, id, "enumeration", data)
+      node = %Node{
+        id: id,
+        class: "enumeration",
+        data: data
+      }
+
+      Paradigm.Graph.insert_node(acc, node)
     end)
   end
 
@@ -71,14 +96,20 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => property.name,
         "is_ordered" => property.is_ordered,
-        "type" => if(property.type, do: %Ref{id: property.type}, else: nil),
+        "type" => if(property.type, do: %Ref{id: property.type, composite: property.is_composite}, else: nil),
         "is_composite" => property.is_composite,
         "lower_bound" => property.lower_bound,
         "upper_bound" => property.upper_bound,
         "default_value" => property.default_value
       }
 
-      Paradigm.Graph.insert_node(acc, id, "property", data)
+      node = %Node{
+        id: id,
+        class: "property",
+        data: data
+      }
+
+      Paradigm.Graph.insert_node(acc, node)
     end)
   end
 
