@@ -605,7 +605,7 @@ defmodule Paradigm.ConformanceTest do
       }
 
       # Same part referenced by two composite properties (should fail)
-      part1 = %Node{id: "part1", class: "part", data: %{}}
+      part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
       container1 = %Node{
         id: "container1",
         class: "container1",
@@ -630,6 +630,135 @@ defmodule Paradigm.ConformanceTest do
                  }
                ]
              } = Conformance.check_graph(graph, paradigm)
+    end
+
+    test "detects composite property without composite reference flag" do
+      paradigm = %Paradigm{
+        classes: %{
+          "container" => %Paradigm.Class{
+            name: "Container",
+            owned_attributes: ["parts"]
+          },
+          "part" => %Paradigm.Class{
+            name: "Part",
+            owned_attributes: []
+          }
+        },
+        properties: %{
+          "parts" => %Paradigm.Property{
+            name: "parts",
+            is_composite: true,
+            lower_bound: 1,
+            upper_bound: :infinity,
+            type: "part"
+          }
+        }
+      }
+
+      # Composite property but reference lacks composite: true flag
+      part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
+      container = %Node{
+        id: "container1",
+        class: "container",
+        data: %{"parts" => [%Ref{id: "part1", composite: false}]}
+      }
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node(part1)
+              |> Paradigm.Graph.insert_node(container)
+
+      assert %Paradigm.Conformance.Result{
+               issues: [
+                 %Paradigm.Conformance.Issue{
+                   property: "parts",
+                   kind: :composite_reference_without_flag,
+                   details: %{referenced_id: "part1"},
+                   node_id: "container1"
+                 }
+               ]
+             } = Conformance.check_graph(graph, paradigm)
+    end
+
+    test "detects node missing owned_by flag in composite relationship" do
+      paradigm = %Paradigm{
+        classes: %{
+          "container" => %Paradigm.Class{
+            name: "Container",
+            owned_attributes: ["parts"]
+          },
+          "part" => %Paradigm.Class{
+            name: "Part",
+            owned_attributes: []
+          }
+        },
+        properties: %{
+          "parts" => %Paradigm.Property{
+            name: "parts",
+            is_composite: true,
+            lower_bound: 1,
+            upper_bound: :infinity,
+            type: "part"
+          }
+        }
+      }
+
+      # Node is owned in composite relationship but lacks owned_by field
+      part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: nil}
+      container = %Node{
+        id: "container1",
+        class: "container",
+        data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+      }
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node(part1)
+              |> Paradigm.Graph.insert_node(container)
+
+      assert %Paradigm.Conformance.Result{
+               issues: [
+                 %Paradigm.Conformance.Issue{
+                   property: nil,
+                   kind: :composite_owned_node_without_owner,
+                   details: nil,
+                   node_id: "part1"
+                 }
+               ]
+             } = Conformance.check_graph(graph, paradigm)
+    end
+
+    test "validates correct composite relationship with proper flags" do
+      paradigm = %Paradigm{
+        classes: %{
+          "container" => %Paradigm.Class{
+            name: "Container",
+            owned_attributes: ["parts"]
+          },
+          "part" => %Paradigm.Class{
+            name: "Part",
+            owned_attributes: []
+          }
+        },
+        properties: %{
+          "parts" => %Paradigm.Property{
+            name: "parts",
+            is_composite: true,
+            lower_bound: 1,
+            upper_bound: :infinity,
+            type: "part"
+          }
+        }
+      }
+
+      # Both composite flag on reference and owned_by flag on node are set correctly
+      part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
+      container = %Node{
+        id: "container1",
+        class: "container",
+        data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+      }
+      graph = MapGraph.new()
+              |> Paradigm.Graph.insert_node(part1)
+              |> Paradigm.Graph.insert_node(container)
+
+      Paradigm.Conformance.assert_conforms(graph, paradigm)
     end
 
     test "detects missing required properties" do

@@ -17,7 +17,9 @@ defmodule Paradigm.Conformance do
               | :invalid_enum_value
               | :expected_reference
               | :composite_primitive_type
-              | :multiple_composite_owners,
+              | :multiple_composite_owners
+              | :composite_reference_without_flag
+              | :composite_owned_node_without_owner,
             node_id: Paradigm.id(),
             property: String.t() | nil,
             details: map() | nil
@@ -66,6 +68,7 @@ defmodule Paradigm.Conformance do
       Paradigm.Graph.get_all_nodes(graph)
       |> Enum.flat_map(&validate_node(&1, paradigm, graph))
       |> Kernel.++(validate_composite_ownership_exclusivity(graph, paradigm))
+      |> Kernel.++(validate_composite_ownership_integrity(graph, paradigm))
 
     %Result{issues: issues}
   end
@@ -214,8 +217,11 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_single_reference(node_id, property, %Ref{id: referenced_id}, paradigm, graph) do
-    case get_node_safe(graph, referenced_id) do
+  defp validate_single_reference(node_id, property, %Ref{id: referenced_id, composite: composite_flag}, paradigm, graph) do
+    issues = []
+
+    # Check if reference exists
+    ref_exists_issues = case get_node_safe(graph, referenced_id) do
       {:error, :node_not_found} ->
         [
           %Issue{
@@ -240,6 +246,22 @@ defmodule Paradigm.Conformance do
           ]
         end
     end
+
+    # Check composite flag consistency
+    composite_flag_issues = if property.is_composite and not composite_flag do
+      [
+        %Issue{
+          kind: :composite_reference_without_flag,
+          node_id: node_id,
+          property: property.name,
+          details: %{referenced_id: referenced_id}
+        }
+      ]
+    else
+      []
+    end
+
+    issues ++ ref_exists_issues ++ composite_flag_issues
   end
 
   defp validate_enum_value(node_id, property, value, paradigm) do
@@ -308,6 +330,56 @@ defmodule Paradigm.Conformance do
         }
       end)
     end)
+  end
+
+  defp validate_composite_ownership_integrity(graph, paradigm) do
+    # Find all nodes that should be owned by composite relationships but aren't
+    composite_owned_nodes = collect_all_composite_owned_nodes(graph, paradigm)
+
+    Paradigm.Graph.get_all_nodes(graph)
+    |> Enum.filter(fn node_id ->
+      node_id in composite_owned_nodes
+    end)
+    |> Enum.flat_map(fn node_id ->
+      case Paradigm.Graph.get_node(graph, node_id) do
+        nil -> []
+        node ->
+          if is_nil(node.owned_by) do
+            [
+              %Issue{
+                kind: :composite_owned_node_without_owner,
+                node_id: node_id,
+                property: nil,
+                details: nil
+              }
+            ]
+          else
+            []
+          end
+      end
+    end)
+  end
+
+  defp collect_all_composite_owned_nodes(graph, paradigm) do
+    Paradigm.Graph.get_all_nodes(graph)
+    |> Enum.reduce(MapSet.new(), fn node_id, acc ->
+      case Paradigm.Graph.get_node(graph, node_id) do
+        nil -> acc
+        node ->
+          Enum.reduce(node.data, acc, fn {property_name, value}, inner_acc ->
+            case Map.get(paradigm.properties, property_name) do
+              %{is_composite: true} ->
+                refs = extract_refs(value)
+                Enum.reduce(refs, inner_acc, fn %Ref{id: referenced_id}, set_acc ->
+                  MapSet.put(set_acc, referenced_id)
+                end)
+              _ ->
+                inner_acc
+            end
+          end)
+      end
+    end)
+    |> MapSet.to_list()
   end
 
   defp collect_composite_references(owner_node_id, property_name, value, paradigm, acc) do
