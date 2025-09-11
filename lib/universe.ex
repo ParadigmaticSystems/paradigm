@@ -12,6 +12,11 @@ defmodule Paradigm.Universe do
     |> String.slice(-5..-1)
   end
 
+  def insert_graph_with_paradigm_by_name(universe, graph, name, paradigm_name) do
+    paradigm_id = find_by_name(universe, paradigm_name)
+    insert_graph_with_paradigm(universe, graph, name, paradigm_id)
+  end
+
   def insert_graph_with_paradigm(universe, graph, name, paradigm_id) do
     id = generate_graph_id(graph)
 

@@ -55,9 +55,9 @@ defmodule GitRepoTest do
       # Merge feature branch
       System.cmd("git", ["merge", "feature-branch"], cd: temp_dir, stderr_to_stdout: true, into: "")
 
-      # on_exit(fn ->
-      #   File.rm_rf(temp_dir)
-      # end)
+      on_exit(fn ->
+        File.rm_rf(temp_dir)
+      end)
 
       {:ok, repo_path: temp_dir}
     end
@@ -140,6 +140,7 @@ defmodule GitRepoTest do
     end
 
     test "production of git repo graph", %{repo_path: repo_path} do
+
       graph = GitRepoGraph.new(root: repo_path)
       Paradigm.Conformance.assert_conforms(graph, Paradigm.Builtin.GitRepo.definition())
 
