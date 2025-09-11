@@ -1,20 +1,15 @@
 # Paradigm Overview
 
-**Paradigm** is an experimental modeling framework that focuses on the formal abstraction relationship between a model and its data. This allows for creation and manipulation of multi-layered structures working at the level of:
+**Paradigm** is a framework for the uniform treatment of different objects as **graph** data with **conformance** and **transformation** relationships. It provides mathematically-grounded primitives for protocol interoperability and model-to-code generation.
 
-* meta-model (data interoperability, schema translation)
-* model (database migration, schema versioning)
-* data (entity analysis, data validation)
+Your **Universe** of discourse is bootstrapped from a built-in **meta-metamodel** which conforms to itself. Different **Paradigms** are introduced as meta-models for objects under scrutiny, such as filesystem contents or data models of a particular format.
 
-The end goal is to characterize complex heterogeneous systems across multi-step transformation pipelines including schema uptake, code generation, and integration tests. First-class treatment of arbitrary Filesystem objects and Shell operations allow for:
+New levels of abstraction are created by introducing transforms at the metamodel level. For example, a schema starts as data of its metamodel, but becomes a model itself in some obvious way. Then we can work with data that conforms to the schema.
 
-* flexible levels of descriptive granularity
-* quick integration of existing tools
-* traceability and provenance by default
-
-This provides an ergonomic core for next-generation MBSE tooling.
+Graph data is decoupled from its physical form by the graph protocol. So you can have (for example) an XML file specifying the conformance of filesystem objects, or vice versa.
 
 ## Structure
+
 ### Paradigms
 - **`Paradigm`** - Top-level data model container
 - **`Paradigm.Package`** - Namespace organization
