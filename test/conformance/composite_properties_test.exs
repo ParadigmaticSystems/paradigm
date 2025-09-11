@@ -24,8 +24,8 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
       }
     }
 
-    part1 = %Node{id: "part1", class: "part", data: %{}}
-    part2 = %Node{id: "part2", class: "part", data: %{}}
+    part1 = %Node{id: "part1", class: "part", owned_by: "container1", data: %{}}
+    part2 = %Node{id: "part2", class: "part", owned_by: "container1", data: %{}}
     container = %Node{
       id: "container1",
       class: "container",
@@ -138,7 +138,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
       classes: %{
         "container" => %Paradigm.Class{
           name: "Container",
-          owned_attributes: ["parts"]
+          owned_attributes: ["container_parts"]
         },
         "part" => %Paradigm.Class{
           name: "Part",
@@ -146,7 +146,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
         }
       },
       properties: %{
-        "parts" => %Paradigm.Property{
+        "container_parts" => %Paradigm.Property{
           name: "parts",
           is_composite: true,
           lower_bound: 1,
@@ -184,7 +184,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
       classes: %{
         "container" => %Paradigm.Class{
           name: "Container",
-          owned_attributes: ["parts"]
+          owned_attributes: ["container_parts"]
         },
         "part" => %Paradigm.Class{
           name: "Part",
@@ -192,7 +192,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
         }
       },
       properties: %{
-        "parts" => %Paradigm.Property{
+        "container_parts" => %Paradigm.Property{
           name: "parts",
           is_composite: true,
           lower_bound: 1,
@@ -216,9 +216,9 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
     assert %Paradigm.Conformance.Result{
               issues: [
                 %Paradigm.Conformance.Issue{
-                  property: nil,
+                  property: "parts",
                   kind: :composite_owned_node_without_owner,
-                  details: nil,
+                  details: %{owner_node_id: "container1"},
                   node_id: "part1"
                 }
               ]
@@ -230,7 +230,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
       classes: %{
         "container" => %Paradigm.Class{
           name: "Container",
-          owned_attributes: ["parts"]
+          owned_attributes: ["container_parts"]
         },
         "part" => %Paradigm.Class{
           name: "Part",
@@ -238,7 +238,7 @@ defmodule Paradigm.Conformance.CompositePropertiesTest do
         }
       },
       properties: %{
-        "parts" => %Paradigm.Property{
+        "container_parts" => %Paradigm.Property{
           name: "parts",
           is_composite: true,
           lower_bound: 1,

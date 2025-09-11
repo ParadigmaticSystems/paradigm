@@ -44,18 +44,32 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
 
     case File.stat(full_path) do
       {:ok, %File.Stat{type: :regular}} ->
+        parent_path = Path.dirname(full_path)
+        owned_by = if parent_path != full_path do
+          make_relative(root_path, parent_path)
+        else
+          nil
+        end
+
         %Node{
           id: node_id,
           class: "file",
           data: build_file_data(full_path, root_path),
-          owned_by: nil
+          owned_by: owned_by
         }
       {:ok, %File.Stat{type: :directory}} ->
+        parent_path = Path.dirname(full_path)
+        owned_by = if parent_path != full_path do
+          make_relative(root_path, parent_path)
+        else
+          nil
+        end
+
         %Node{
           id: node_id,
           class: "folder",
           data: build_folder_data(full_path, root_path),
-          owned_by: nil
+          owned_by: owned_by
         }
       {:error, _} -> nil
     end

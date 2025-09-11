@@ -61,7 +61,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               id: node_id,
               class: "commit",
               data: build_commit_data(root_path, commit_info),
-              owned_by: nil
+              owned_by: "repository"
             }
         end
       String.starts_with?(node_id, "branch:") ->
@@ -73,7 +73,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               id: node_id,
               class: "branch",
               data: build_branch_data(branch_info),
-              owned_by: nil
+              owned_by: "repository"
             }
         end
       String.starts_with?(node_id, "tag:") ->
@@ -85,7 +85,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               id: node_id,
               class: "tag",
               data: build_tag_data(tag_info),
-              owned_by: nil
+              owned_by: "repository"
             }
         end
       true -> nil

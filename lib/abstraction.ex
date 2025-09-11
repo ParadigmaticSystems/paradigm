@@ -64,10 +64,19 @@ defmodule Paradigm.Abstraction do
         "super_classes" => Enum.map(class.super_classes || [], &%Ref{id: &1})
       }
 
+      owner_package_id = Enum.find_value(paradigm.packages, fn {package_id, package} ->
+        if Enum.member?(package.owned_types || [], id) do
+          package_id
+        else
+          nil
+        end
+      end)
+
       node = %Node{
         id: id,
         class: "class",
-        data: data
+        data: data,
+        owned_by: owner_package_id
       }
 
       Paradigm.Graph.insert_node(acc, node)
@@ -103,10 +112,19 @@ defmodule Paradigm.Abstraction do
         "default_value" => property.default_value
       }
 
+      owner_class_id = Enum.find_value(paradigm.classes, fn {class_id, class} ->
+        if Enum.member?(class.owned_attributes || [], id) do
+          class_id
+        else
+          nil
+        end
+      end)
+
       node = %Node{
         id: id,
         class: "property",
-        data: data
+        data: data,
+        owned_by: owner_class_id
       }
 
       Paradigm.Graph.insert_node(acc, node)

@@ -55,9 +55,9 @@ defmodule GitRepoTest do
       # Merge feature branch
       System.cmd("git", ["merge", "feature-branch"], cd: temp_dir, stderr_to_stdout: true, into: "")
 
-      on_exit(fn ->
-        File.rm_rf(temp_dir)
-      end)
+      # on_exit(fn ->
+      #   File.rm_rf(temp_dir)
+      # end)
 
       {:ok, repo_path: temp_dir}
     end
@@ -143,7 +143,7 @@ defmodule GitRepoTest do
       graph = GitRepoGraph.new(root: repo_path)
       Paradigm.Conformance.assert_conforms(graph, Paradigm.Builtin.GitRepo.definition())
 
-      # nodes = Graph.get_all_nodes_of_class(graph, "commit")
+      Graph.get_all_nodes_of_class(graph, "commit")
 
       # Enum.each(nodes, fn node_id ->
       #   node = Graph.get_node(graph, node_id)
