@@ -58,13 +58,13 @@ defmodule Paradigm.Graph.Diff do
 
     data_changes = all_keys
       |> Enum.reduce(%{}, fn key, acc ->
-        old_value = Map.get(old_data, key)
-        new_value = Map.get(new_data, key)
+        old_value = Map.fetch(old_data, key)
+        new_value = Map.fetch(new_data, key)
 
-        if old_value != new_value do
-          Map.put(acc, key, %{old: old_value, new: new_value})
-        else
-          acc
+        case {old_value, new_value} do
+          {{:ok, same}, {:ok, same}} -> acc
+          {{:ok, value}, :error} -> Map.put(acc, key, %{old: value, new: "MISSING VALUE"})
+          {:error, {:ok, value}} -> Map.put(acc, key, %{old: "MISSING VALUE", new: value})
         end
       end)
 
