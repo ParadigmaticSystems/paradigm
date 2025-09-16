@@ -38,6 +38,37 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   end
 
   @impl true
+  def stream_all_nodes(%{root: root_path} = git_graph) do
+    case is_git_repo?(root_path) do
+      true ->
+        Stream.concat([
+          # Repository node
+          ["repository"]
+          |> Stream.map(&get_node(git_graph, &1)),
+
+          # Stream commits
+          get_all_commit_hashes(root_path)
+          |> Stream.map(&("commit:" <> &1))
+          |> Stream.map(&get_node(git_graph, &1)),
+
+          # Stream branches
+          get_all_branches(root_path)
+          |> Stream.map(&("branch:" <> &1))
+          |> Stream.map(&get_node(git_graph, &1)),
+
+          # Stream tags
+          get_all_tags(root_path)
+          |> Stream.map(&("tag:" <> &1))
+          |> Stream.map(&get_node(git_graph, &1))
+        ])
+        |> Stream.reject(&is_nil/1)
+      false ->
+        []
+        |> Stream.map(& &1)
+    end
+  end
+
+  @impl true
   def get_all_classes(_git_repo_graph) do
     ["repository", "commit", "branch", "tag"]
   end
@@ -136,7 +167,19 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   end
 
   @impl true
-  def get_node_data(%{root: root_path}, node_id, property_name, default \\ nil) do
+  def get_node_data(%{root: root_path}, node_id, property_name) do
+    case get_node(%{root: root_path}, node_id) do
+      nil -> :error
+      node ->
+        case Map.fetch(node.data, property_name) do
+          {:ok, value} -> {:ok, value}
+          :error -> :error
+        end
+    end
+  end
+
+  @impl true
+  def get_node_data(%{root: root_path}, node_id, property_name, default) do
     case get_node(%{root: root_path}, node_id) do
       nil -> default
       node -> Map.get(node.data, property_name, default)

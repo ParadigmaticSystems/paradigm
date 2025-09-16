@@ -31,6 +31,11 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   end
 
   @impl true
+  def stream_all_nodes(%{nodes: graph}) do
+    Stream.map(graph, fn {_id, node} -> node end)
+  end
+
+  @impl true
   def insert_node(%{nodes: graph} = map_graph, %Node{id: id, data: data} = node) do
     normalized_data = normalize_keys_to_strings(data)
     normalized_node = %{node | data: normalized_data}
@@ -61,6 +66,18 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   end
 
   @impl true
+  def get_node_data(%{nodes: graph}, node_id, key) do
+    case graph[node_id] do
+      %Node{data: data} ->
+        case Map.fetch(data, key) do
+          {:ok, value} -> {:ok, value}
+          :error -> :error
+        end
+      nil -> :error
+    end
+  end
+
+  @impl true
   def get_node_data(%{nodes: graph}, node_id, key, default \\ nil) do
     case graph[node_id] do
       %Node{data: data} -> Map.get(data, key, default)
@@ -71,8 +88,8 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   @impl true
   def follow_reference(%{nodes: graph} = map_graph, node_id, reference_key) do
     case get_node_data(map_graph, node_id, reference_key) do
-      nil -> nil
-      %Node.Ref{id: ref_id} -> graph[ref_id]
+      :error -> nil
+      {:ok, %Node.Ref{id: ref_id}} -> graph[ref_id]
     end
   end
 

@@ -34,6 +34,31 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   @impl true
+    def stream_all_nodes(%{root: root_path}) do
+      case File.exists?(root_path) do
+        true ->
+          Stream.resource(
+            fn -> {collect_all_paths(root_path), 0} end,
+            fn {paths, index} ->
+              if index >= length(paths) do
+                {:halt, {paths, index}}
+              else
+                path = Enum.at(paths, index)
+                case get_node(%{root: root_path}, path) do
+                  nil -> {[], {paths, index + 1}}
+                  node -> {[node], {paths, index + 1}}
+                end
+              end
+            end,
+            fn _ -> :ok end
+          )
+        false ->
+          []
+          |> Stream.map(& &1)
+      end
+    end
+
+  @impl true
   def get_all_classes(_filesystem_graph) do
     ["file", "folder", "node"]
   end
@@ -90,6 +115,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
       node_class in class_ids or inherits_from_class?(node_class, class_ids)
     end)
   end
+
 
   @impl true
   def insert_node(%{root: root_path} = fs_graph, %Node{id: node_id, class: class_id, data: node_data}) do

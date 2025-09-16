@@ -14,18 +14,28 @@ defmodule Paradigm.Graph.Diff do
     changed: %{Graph.node_id() => map()}
   }
   def diff(old_graph, new_graph) do
-    old_nodes = Graph.get_all_nodes(old_graph) |> MapSet.new()
-    new_nodes = Graph.get_all_nodes(new_graph) |> MapSet.new()
+    old_nodes_map = Graph.stream_all_nodes(old_graph)
+      |> Enum.reduce(%{}, fn node, acc ->
+        Map.put(acc, node.id, node)
+      end)
 
-    added = MapSet.difference(new_nodes, old_nodes) |> MapSet.to_list()
-    removed = MapSet.difference(old_nodes, new_nodes) |> MapSet.to_list()
+    new_nodes_map = Graph.stream_all_nodes(new_graph)
+      |> Enum.reduce(%{}, fn node, acc ->
+        Map.put(acc, node.id, node)
+      end)
 
-    common_nodes = MapSet.intersection(old_nodes, new_nodes)
+    old_node_ids = MapSet.new(Map.keys(old_nodes_map))
+    new_node_ids = MapSet.new(Map.keys(new_nodes_map))
+
+    added = MapSet.difference(new_node_ids, old_node_ids) |> MapSet.to_list()
+    removed = MapSet.difference(old_node_ids, new_node_ids) |> MapSet.to_list()
+
+    common_nodes = MapSet.intersection(old_node_ids, new_node_ids)
 
     changed = common_nodes
       |> Enum.reduce(%{}, fn node_id, acc ->
-        old_node = Graph.get_node(old_graph, node_id)
-        new_node = Graph.get_node(new_graph, node_id)
+        old_node = Map.get(old_nodes_map, node_id)
+        new_node = Map.get(new_nodes_map, node_id)
 
         if old_node != new_node do
           node_diff = compute_node_diff(old_node, new_node)
@@ -63,6 +73,7 @@ defmodule Paradigm.Graph.Diff do
 
         case {old_value, new_value} do
           {{:ok, same}, {:ok, same}} -> acc
+          {{:ok, old}, {:ok, new}} -> Map.put(acc, key, %{old: old, new: new})
           {{:ok, value}, :error} -> Map.put(acc, key, %{old: value, new: "MISSING VALUE"})
           {:error, {:ok, value}} -> Map.put(acc, key, %{old: "MISSING VALUE", new: value})
         end

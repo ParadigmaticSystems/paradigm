@@ -41,6 +41,11 @@ defmodule Paradigm.Conformance do
   Asserts that a graph conforms to a paradigm.
   """
   def assert_conforms(graph, paradigm) do
+    # Check if graph is empty and raise trivial conformance error
+    if Paradigm.Graph.stream_all_nodes(graph) |> Enum.empty?() do
+      raise "Graph is empty"
+    end
+
     case check_graph(graph, paradigm) do
       %Paradigm.Conformance.Result{issues: []} ->
         graph
@@ -62,32 +67,30 @@ defmodule Paradigm.Conformance do
     |> Enum.join("\n")
   end
 
-  @spec check_graph(any(), %Paradigm{} | Graph.t()) :: Result.t()
-  def check_graph(graph, %Paradigm{} = paradigm) do
+  @spec check_graph(any(), %Paradigm{} | Graph.t(), integer()) :: Result.t()
+  def check_graph(graph, paradigm, cutoff \\ 50)
+  def check_graph(graph, %Paradigm{} = paradigm, cutoff) do
     issues =
-      Paradigm.Graph.get_all_nodes(graph)
-      |> Enum.flat_map(&validate_node(&1, paradigm, graph))
+      Paradigm.Graph.stream_all_nodes(graph)
+      |> Stream.flat_map(&validate_node(&1, paradigm, graph))
+      |> Stream.take(cutoff)
+      |> Enum.to_list()
       |> Kernel.++(validate_composite_ownership_exclusivity(graph, paradigm))
 
     %Result{issues: issues}
   end
 
-  def check_graph(graph, paradigm_graph) do
-    check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph))
+  def check_graph(graph, paradigm_graph, cutoff) do
+    check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph), cutoff)
   end
 
 
-  defp validate_node(node_id, paradigm, graph) do
-    with {:ok, node} <- get_node_safe(graph, node_id),
-         {:ok, _class} <- get_class_safe(paradigm, node.class) do
-      validate_node_properties(node, node_id, paradigm, graph)
+  defp validate_node(node, paradigm, graph) do
+    with {:ok, _class} <- get_class_safe(paradigm, node.class) do
+      validate_node_properties(node, node.id, paradigm, graph)
     else
       {:error, :invalid_class} ->
-        class = get_node_class(graph, node_id)
-        [%Issue{kind: :invalid_class, node_id: node_id, property: nil, details: %{class: class}}]
-
-      {:error, :node_not_found} ->
-        []
+        [%Issue{kind: :invalid_class, node_id: node.id, property: nil, details: %{class: node.class}}]
     end
   end
 
@@ -325,15 +328,11 @@ defmodule Paradigm.Conformance do
   defp validate_composite_ownership_exclusivity(graph, paradigm) do
     # Build a map of referenced node IDs to their composite owners
     composite_owners =
-      Paradigm.Graph.get_all_nodes(graph)
-      |> Enum.reduce(%{}, fn node_id, acc ->
-        case Paradigm.Graph.get_node(graph, node_id) do
-          nil -> acc
-          node ->
-            Enum.reduce(node.data, acc, fn {property_name, value}, inner_acc ->
-              collect_composite_references(node_id, property_name, value, paradigm, inner_acc)
-            end)
-        end
+      Paradigm.Graph.stream_all_nodes(graph)
+      |> Enum.reduce(%{}, fn node, acc ->
+        Enum.reduce(node.data, acc, fn {property_name, value}, inner_acc ->
+          collect_composite_references(node.id, property_name, value, paradigm, inner_acc)
+        end)
       end)
 
     # Find nodes with multiple composite owners
@@ -375,13 +374,6 @@ defmodule Paradigm.Conformance do
     case Paradigm.Graph.get_node(graph, node_id) do
       nil -> {:error, :node_not_found}
       node -> {:ok, node}
-    end
-  end
-
-  defp get_node_class(graph, node_id) do
-    case Paradigm.Graph.get_node(graph, node_id) do
-      nil -> nil
-      node -> node.class
     end
   end
 

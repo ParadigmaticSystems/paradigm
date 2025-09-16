@@ -10,6 +10,9 @@ defprotocol Paradigm.Graph do
   @spec get_all_nodes(t()) :: [node_id]
   def get_all_nodes(data)
 
+  @spec stream_all_nodes(t()) :: Enumerable.t(Node.t())
+  def stream_all_nodes(data)
+
   @spec get_all_classes(t()) :: [class_id]
   def get_all_classes(data)
 
@@ -24,6 +27,9 @@ defprotocol Paradigm.Graph do
 
   @spec insert_nodes(t(), [Paradigm.Graph.Node.t()]) :: t()
   def insert_nodes(data, nodes)
+
+  @spec get_node_data(t(), node_id, any()) :: {:ok, any()} | :error
+  def get_node_data(data, node_id, key)
 
   @spec get_node_data(t(), node_id, any(), any()) :: any()
   def get_node_data(data, node_id, key, default)
