@@ -1,6 +1,6 @@
-defmodule Paradigm.ConformanceTestSuite do
+defmodule Paradigm.GraphTestSuite do
   @moduledoc """
-  Complete conformance test suite that can be used with any graph implementation.
+  Complete graph test suite that can be used with any graph implementation.
   """
 
   use ExUnit.CaseTemplate
@@ -25,11 +25,9 @@ defmodule Paradigm.ConformanceTestSuite do
         |> Paradigm.Graph.insert_node(node)
       end
 
-      # Include all test suites
-      use Paradigm.Conformance.TestSuite.BasicValidation
-      use Paradigm.Conformance.TestSuite.Multiplicity
-      use Paradigm.Conformance.TestSuite.CompositeProperties
-      use Paradigm.Conformance.TestSuite.References
+      use Paradigm.Graph.TestSuite.BasicGraphFunctions
+      use Paradigm.Graph.TestSuite.DiffTests
+
     end
   end
 end

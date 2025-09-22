@@ -1,4 +1,4 @@
-defmodule Paradigm.Conformance.TestSuite.BasicGraphFunctions do
+defmodule Paradigm.Graph.TestSuite.BasicGraphFunctions do
   @moduledoc """
   Basic graph function tests that can be included in conformance test suites.
   """

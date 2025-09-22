@@ -50,6 +50,33 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                    Paradigm.Conformance.check_graph(graph, paradigm)
         end
 
+        test "detects abstract class" do
+          paradigm = %Paradigm{
+            classes: %{
+              "class1" => %Paradigm.Class{
+                name: "TestClass",
+                is_abstract: true,
+                owned_attributes: []
+              }
+            }
+          }
+
+          node = %Paradigm.Graph.Node{id: "node1", class: "class1", data: %{}}
+          graph = build_graph(node)
+
+          assert %Paradigm.Conformance.Result{
+                   issues: [
+                     %Paradigm.Conformance.Issue{
+                       property: nil,
+                       kind: :abstract_class_instantiated,
+                       details: %{class: "class1"},
+                       node_id: "node1"
+                     }
+                   ]
+                 } =
+                   Paradigm.Conformance.check_graph(graph, paradigm)
+        end
+
         test "validates inherited properties from superclass" do
           paradigm = %Paradigm{
             primitive_types: %{"string" => %Paradigm.PrimitiveType{name: "String"}},

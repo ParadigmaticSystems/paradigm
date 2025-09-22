@@ -19,7 +19,8 @@ defmodule Paradigm.Conformance do
               | :composite_primitive_type
               | :multiple_composite_owners
               | :composite_reference_without_flag
-              | :composite_owned_node_without_owner,
+              | :composite_owned_node_without_owner
+              | :abstract_class_instantiated,
             node_id: Paradigm.id(),
             property: String.t() | nil,
             details: map() | nil
@@ -86,8 +87,16 @@ defmodule Paradigm.Conformance do
 
 
   defp validate_node(node, paradigm, graph) do
-    with {:ok, _class} <- get_class_safe(paradigm, node.class) do
-      validate_node_properties(node, node.id, paradigm, graph)
+    with {:ok, class} <- get_class_safe(paradigm, node.class) do
+      abstract_class_issues = if class.is_abstract do
+        [%Issue{kind: :abstract_class_instantiated, node_id: node.id, property: nil, details: %{class: node.class}}]
+      else
+        []
+      end
+
+      property_issues = validate_node_properties(node, node.id, paradigm, graph)
+
+      abstract_class_issues ++ property_issues
     else
       {:error, :invalid_class} ->
         [%Issue{kind: :invalid_class, node_id: node.id, property: nil, details: %{class: node.class}}]
