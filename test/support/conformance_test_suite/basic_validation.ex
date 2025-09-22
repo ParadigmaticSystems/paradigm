@@ -2,8 +2,6 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
   defmacro __using__(_opts) do
     quote do
       alias Paradigm.Graph
-      alias Paradigm.Graph.Node
-      alias Paradigm.Conformance
 
       describe "check_graph/2" do
         test "validates valid graph" do
@@ -25,7 +23,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Node{id: "node1", class: "class1", data: %{"testProp" => "value"}}
+          node = %Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"testProp" => "value"}}
           graph = build_graph(node)
 
           Paradigm.Conformance.assert_conforms(graph, paradigm)
@@ -36,7 +34,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{}
           }
 
-          node = %Node{id: "node1", class: "invalid_class", data: %{}}
+          node = %Paradigm.Graph.Node{id: "node1", class: "invalid_class", data: %{}}
           graph = build_graph(node)
 
           assert %Paradigm.Conformance.Result{
@@ -49,7 +47,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      }
                    ]
                  } =
-                   Conformance.check_graph(graph, paradigm)
+                   Paradigm.Conformance.check_graph(graph, paradigm)
         end
 
         test "validates inherited properties from superclass" do
@@ -82,7 +80,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Node{
+          node = %Paradigm.Graph.Node{
             id: "node1",
             class: "child_class",
             data: %{
@@ -95,7 +93,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
           Paradigm.Conformance.assert_conforms(graph, paradigm)
 
           # Missing inherited property
-          invalid_node = %Node{
+          invalid_node = %Paradigm.Graph.Node{
             id: "node1",
             class: "child_class",
             data: %{"childProp" => "child_value"}
@@ -112,7 +110,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      }
                    ]
                  } =
-                   Conformance.check_graph(invalid_graph, paradigm)
+                   Paradigm.Conformance.check_graph(invalid_graph, paradigm)
         end
 
         test "validates ordered property constraints" do
@@ -135,7 +133,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Node{
+          node = %Paradigm.Graph.Node{
             id: "node1",
             class: "class1",
             data: %{"orderedProp" => ["value1", "value2", "value3"]}
@@ -162,7 +160,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Node{id: "node1", class: "class1", data: %{}}
+          node = %Paradigm.Graph.Node{id: "node1", class: "class1", data: %{}}
           graph = build_graph(node)
 
           assert %Paradigm.Conformance.Result{
@@ -175,7 +173,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      }
                    ]
                  } ==
-                   Conformance.check_graph(graph, paradigm)
+                   Paradigm.Conformance.check_graph(graph, paradigm)
         end
 
         test "detects extra properties" do
@@ -188,7 +186,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Node{
+          node = %Paradigm.Graph.Node{
             id: "node1",
             class: "class1",
             data: %{"extraProp" => "value"}
@@ -205,7 +203,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      }
                    ]
                  } =
-                   Conformance.check_graph(graph, paradigm)
+                   Paradigm.Conformance.check_graph(graph, paradigm)
         end
 
         test "validates enumeration values" do
@@ -231,7 +229,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
           }
 
           # Test valid enum value
-          node1 = %Node{
+          node1 = %Paradigm.Graph.Node{
             id: "node1",
             class: "class1",
             data: %{"enumProp" => "RED"}
@@ -241,7 +239,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
           Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
           # Test invalid enum value
-          node2 = %Node{
+          node2 = %Paradigm.Graph.Node{
             id: "node1",
             class: "class1",
             data: %{"enumProp" => "PURPLE"}
@@ -258,7 +256,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      }
                    ]
                  } =
-                   Conformance.check_graph(graph2, paradigm)
+                   Paradigm.Conformance.check_graph(graph2, paradigm)
         end
       end
 

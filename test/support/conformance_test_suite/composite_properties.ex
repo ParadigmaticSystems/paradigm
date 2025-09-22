@@ -2,9 +2,6 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
 
   defmacro __using__(_opts) do
     quote do
-      alias Paradigm.Graph
-      alias Paradigm.Graph.Node
-      alias Paradigm.Graph.Node.Ref
 
       test "validates composite property constraints" do
         paradigm = %Paradigm{
@@ -29,12 +26,12 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           }
         }
 
-        part1 = %Node{id: "part1", class: "part", owned_by: "container1", data: %{}}
-        part2 = %Node{id: "part2", class: "part", owned_by: "container1", data: %{}}
-        container = %Node{
+        part1 = %Paradigm.Graph.Node{id: "part1", class: "part", owned_by: "container1", data: %{}}
+        part2 = %Paradigm.Graph.Node{id: "part2", class: "part", owned_by: "container1", data: %{}}
+        container = %Paradigm.Graph.Node{
           id: "container1",
           class: "container",
-          data: %{"compositeParts" => [%Ref{id: "part1", composite: true}, %Ref{id: "part2", composite: true}]}
+          data: %{"compositeParts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: true}, %Paradigm.Graph.Node.Ref{id: "part2", composite: true}]}
         }
         graph = build_graph(part1)
                 |> Paradigm.Graph.insert_node(part2)
@@ -62,7 +59,7 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           }
         }
 
-        node = %Node{
+        node = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{"invalidComposite" => ["value1", "value2"]}
@@ -109,16 +106,16 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
         }
 
         # Same part referenced by two composite properties (should fail)
-        part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
-        container1 = %Node{
+        part1 = %Paradigm.Graph.Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
+        container1 = %Paradigm.Graph.Node{
           id: "container1",
           class: "container1",
-          data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+          data: %{"parts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: true}]}
         }
-        container2 = %Node{
+        container2 = %Paradigm.Graph.Node{
           id: "container2",
           class: "container2",
-          data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+          data: %{"parts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: true}]}
         }
         graph = build_graph(part1)
                 |> Paradigm.Graph.insert_node(container1)
@@ -159,11 +156,11 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
         }
 
         # Composite property but reference lacks composite: true flag
-        part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
-        container = %Node{
+        part1 = %Paradigm.Graph.Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
+        container = %Paradigm.Graph.Node{
           id: "container1",
           class: "container",
-          data: %{"parts" => [%Ref{id: "part1", composite: false}]}
+          data: %{"parts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: false}]}
         }
         graph = build_graph(part1)
                 |> Paradigm.Graph.insert_node(container)
@@ -204,11 +201,11 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
         }
 
         # Node is owned in composite relationship but lacks owned_by field
-        part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: nil}
-        container = %Node{
+        part1 = %Paradigm.Graph.Node{id: "part1", class: "part", data: %{}, owned_by: nil}
+        container = %Paradigm.Graph.Node{
           id: "container1",
           class: "container",
-          data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+          data: %{"parts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: true}]}
         }
         graph = build_graph(part1)
                 |> Paradigm.Graph.insert_node(container)
@@ -249,11 +246,11 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
         }
 
         # Both composite flag on reference and owned_by flag on node are set correctly
-        part1 = %Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
-        container = %Node{
+        part1 = %Paradigm.Graph.Node{id: "part1", class: "part", data: %{}, owned_by: "container1"}
+        container = %Paradigm.Graph.Node{
           id: "container1",
           class: "container",
-          data: %{"parts" => [%Ref{id: "part1", composite: true}]}
+          data: %{"parts" => [%Paradigm.Graph.Node.Ref{id: "part1", composite: true}]}
         }
         graph = build_graph([part1, container])
 

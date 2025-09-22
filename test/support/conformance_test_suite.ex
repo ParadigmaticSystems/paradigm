@@ -9,11 +9,6 @@ defmodule Paradigm.ConformanceTestSuite do
     quote do
       use ExUnit.Case
 
-      alias Paradigm.Graph
-      alias Paradigm.Graph.Node
-      alias Paradigm.Graph.Node.Ref
-      alias Paradigm.Conformance
-
       @graph_impl Keyword.fetch!(unquote(opts), :graph_impl)
 
       defp new_graph do
@@ -21,13 +16,13 @@ defmodule Paradigm.ConformanceTestSuite do
       end
 
       defp build_graph(nodes) when is_list(nodes) do
-        @graph_impl.new()
-        |> Graph.insert_nodes(nodes)
+        new_graph()
+        |> Paradigm.Graph.insert_nodes(nodes)
       end
 
-      defp build_graph(node) when is_struct(node, Node) do
-        @graph_impl.new()
-        |> Graph.insert_node(node)
+      defp build_graph(node) when is_struct(node, Paradigm.Graph.Node) do
+        new_graph()
+        |> Paradigm.Graph.insert_node(node)
       end
 
       # Include all test suites

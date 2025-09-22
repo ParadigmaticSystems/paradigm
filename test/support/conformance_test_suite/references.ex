@@ -2,9 +2,6 @@ defmodule Paradigm.Conformance.TestSuite.References do
 
   defmacro __using__(_opts) do
     quote do
-      alias Paradigm.Graph
-      alias Paradigm.Graph.Node
-      alias Paradigm.Conformance
 
       test "validates property references to superclass type" do
         paradigm = %Paradigm{
@@ -37,8 +34,8 @@ defmodule Paradigm.Conformance.TestSuite.References do
           }
         }
 
-        node1 = %Node{id: "node1", class: "cow", data: %{}}
-        node2 = %Node{
+        node1 = %Paradigm.Graph.Node{id: "node1", class: "cow", data: %{}}
+        node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
@@ -54,7 +51,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
                      node_id: "node2"
                    }
                  ]
-               } = Conformance.check_graph(graph, paradigm)
+               } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
 
       test "validates valid reference to correct class" do
@@ -85,8 +82,8 @@ defmodule Paradigm.Conformance.TestSuite.References do
         }
 
         # Test direct class match
-        node1 = %Node{id: "node1", class: "vehicle", data: %{}}
-        node2 = %Node{
+        node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
+        node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
@@ -96,8 +93,8 @@ defmodule Paradigm.Conformance.TestSuite.References do
         Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
         # Test subclass match
-        truck_node = %Node{id: "node1", class: "truck", data: %{}}
-        garage_node = %Node{
+        truck_node = %Paradigm.Graph.Node{id: "node1", class: "truck", data: %{}}
+        garage_node = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
@@ -129,7 +126,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
           }
         }
 
-        node = %Node{
+        node = %Paradigm.Graph.Node{
           id: "node1",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "nonexistent_node"}}
@@ -145,7 +142,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
                      node_id: "node1"
                    }
                  ]
-               } = Conformance.check_graph(graph, paradigm)
+               } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
 
       test "validates multiple references in collection" do
@@ -170,9 +167,9 @@ defmodule Paradigm.Conformance.TestSuite.References do
           }
         }
 
-        node1 = %Node{id: "node1", class: "vehicle", data: %{}}
-        node2 = %Node{id: "node2", class: "vehicle", data: %{}}
-        node3 = %Node{
+        node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
+        node2 = %Paradigm.Graph.Node{id: "node2", class: "vehicle", data: %{}}
+        node3 = %Paradigm.Graph.Node{
           id: "node3",
           class: "garage",
           data: %{"vehicleRefs" => [%Paradigm.Graph.Node.Ref{id: "node1"}, %Paradigm.Graph.Node.Ref{id: "node2"}]}
@@ -206,8 +203,8 @@ defmodule Paradigm.Conformance.TestSuite.References do
           }
         }
 
-        node1 = %Node{id: "node1", class: "vehicle", data: %{}}
-        node2 = %Node{
+        node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
+        node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRefs" => [%Paradigm.Graph.Node.Ref{id: "node1"}, %Paradigm.Graph.Node.Ref{id: "missing_node"}]}
@@ -224,7 +221,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
                      node_id: "node2"
                    }
                  ]
-               } = Conformance.check_graph(graph, paradigm)
+               } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
 
       test "detects non-reference value for reference property" do
@@ -250,7 +247,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
         }
 
         # Property should contain %Paradigm.Graph.Node.Ref{} but has string instead
-        node = %Node{
+        node = %Paradigm.Graph.Node{
           id: "node1",
           class: "garage",
           data: %{"vehicleRef" => "not_a_reference"}  # Should be %Paradigm.Graph.Node.Ref{id: "..."}
@@ -266,7 +263,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
               node_id: "node1"
             }
           ]
-        } = Conformance.check_graph(graph, paradigm)
+        } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
     end
   end

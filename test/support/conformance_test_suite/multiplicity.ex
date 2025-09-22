@@ -2,9 +2,6 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
 
   defmacro __using__(_opts) do
     quote do
-      alias Paradigm.Graph
-      alias Paradigm.Graph.Node
-      alias Paradigm.Conformance
 
       test "validates property cardinality" do
         paradigm = %Paradigm{
@@ -26,7 +23,7 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
         }
 
         # Test too few values
-        node1 = %Node{
+        node1 = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{"testProp" => ["value1"]}
@@ -43,10 +40,10 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
                    }
                  ]
                } =
-                 Conformance.check_graph(graph1, paradigm)
+                 Paradigm.Conformance.check_graph(graph1, paradigm)
 
         # Test too many values
-        node2 = %Node{
+        node2 = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{"testProp" => ["value1", "value2", "value3", "value4"]}
@@ -63,7 +60,7 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
                    }
                  ]
                } =
-                 Conformance.check_graph(graph2, paradigm)
+                 Paradigm.Conformance.check_graph(graph2, paradigm)
       end
 
 
@@ -99,7 +96,7 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
         }
 
         # Test zero cardinality
-        node1 = %Node{
+        node1 = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{
@@ -113,7 +110,7 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
         Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
         # Test optional property
-        node2 = %Node{
+        node2 = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{
@@ -127,7 +124,7 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
         Paradigm.Conformance.assert_conforms(graph2, paradigm)
 
         # Test infinite upper bound
-        node3 = %Node{
+        node3 = %Paradigm.Graph.Node{
           id: "node1",
           class: "class1",
           data: %{
