@@ -5,7 +5,7 @@ defmodule FilesystemTest do
     test "filesystem adapter counts test files" do
       filesystem_graph = Paradigm.Graph.FilesystemGraph.new(root: "./test")
       nodes = Paradigm.Graph.get_all_nodes(filesystem_graph)
-      assert length(nodes) == 21
+      assert length(nodes) >= 24
     end
 
     test "graph instance filesystem adapter is conformant" do

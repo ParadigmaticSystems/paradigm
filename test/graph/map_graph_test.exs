@@ -3,6 +3,8 @@ defmodule Paradigm.Graph.MapGraphTest do
   alias Paradigm.Graph.MapGraph
   alias Paradigm.Graph.Node
 
+  use Paradigm.ConformanceTestSuite, graph_impl: Paradigm.Graph.MapGraph
+
   describe "new/1" do
     test "creates a new MapGraph with empty nodes" do
       graph = MapGraph.new()
