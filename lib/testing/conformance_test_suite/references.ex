@@ -265,6 +265,42 @@ defmodule Paradigm.Conformance.TestSuite.References do
           ]
         } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
+
+      test "validates external reference to MOF primitive type" do
+        paradigm = %Paradigm{
+          primitive_types: %{
+            "boolean" => %Paradigm.PrimitiveType{name: "Boolean"}
+          },
+          classes: %{
+            "property" => %Paradigm.Class{
+              name: "Property",
+              owned_attributes: ["type_ref"]
+            }
+          },
+          properties: %{
+            "type_ref" => %Paradigm.Property{
+              name: "type",
+              lower_bound: 1,
+              upper_bound: 1,
+              type: "boolean"
+            }
+          }
+        }
+
+        # External reference to MOF Boolean primitive type.
+        # Not that there is anything special about it.
+        node = %Paradigm.Graph.Node{
+          id: "node1",
+          class: "property",
+          data: %{"type" => %Paradigm.Graph.Node.ExternalRef{
+            href: "http://schema.omg.org/spec/MOF/2.0/emof.xml#Boolean",
+            type: "emof:PrimitiveType"
+          }}
+        }
+        graph = build_graph(node)
+
+        Paradigm.Conformance.assert_conforms(graph, paradigm)
+      end
     end
   end
 end

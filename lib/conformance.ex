@@ -1,5 +1,6 @@
 defmodule Paradigm.Conformance do
   alias Paradigm.Graph.Node.Ref
+  alias Paradigm.Graph.Node.ExternalRef
 
   defmodule Issue do
     defstruct [:kind, :node_id, :property, :details]
@@ -124,11 +125,11 @@ defmodule Paradigm.Conformance do
 
     missing_issues =
       MapSet.difference(required_names, data_keys)
-      |> Enum.map(&%Issue{kind: :missing_property, node_id: node_id, property: &1, details: nil})
+      |> Enum.map(&%Issue{kind: :missing_property, node_id: node_id, property: &1, details: %{class: node.class}})
 
     unknown_issues =
       MapSet.difference(data_keys, property_names)
-      |> Enum.map(&%Issue{kind: :unknown_property, node_id: node_id, property: &1, details: nil})
+      |> Enum.map(&%Issue{kind: :unknown_property, node_id: node_id, property: &1, details: %{class: node.class}})
 
     missing_issues ++ unknown_issues
   end
@@ -298,6 +299,12 @@ defmodule Paradigm.Conformance do
     issues ++ ref_exists_issues ++ composite_flag_issues ++ composite_ownership_issues
   end
 
+  defp validate_single_reference(_node_id, _property, %ExternalRef{}, _paradigm, _graph) do
+    # External references are always valid - they point outside the model
+    # We assume they are resolved elsewhere or are inherently valid
+    []
+  end
+
   defp validate_enum_value(node_id, property, value, paradigm) do
     if is_enum_property?(property, paradigm) do
       enum = paradigm.enumerations[property.type]
@@ -398,17 +405,19 @@ defmodule Paradigm.Conformance do
   defp normalize_to_list(value), do: [value]
 
   defp extract_refs(value) when is_list(value) do
-    Enum.filter(value, &match?(%Ref{}, &1))
+    Enum.filter(value, &(match?(%Ref{}, &1) or match?(%ExternalRef{}, &1)))
   end
 
   defp extract_refs(%Ref{} = ref), do: [ref]
+  defp extract_refs(%ExternalRef{} = ref), do: [ref]
   defp extract_refs(_), do: []
 
   defp extract_non_refs(value) when is_list(value) do
-    Enum.reject(value, &(match?(%Ref{}, &1) or is_nil(&1)))
+    Enum.reject(value, &(match?(%Ref{}, &1) or match?(%ExternalRef{}, &1) or is_nil(&1)))
   end
 
   defp extract_non_refs(%Ref{}), do: []
+  defp extract_non_refs(%ExternalRef{}), do: []
   defp extract_non_refs(nil), do: []
   defp extract_non_refs(value), do: [value]
 

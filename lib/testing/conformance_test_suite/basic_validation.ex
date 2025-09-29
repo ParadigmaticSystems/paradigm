@@ -132,7 +132,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      %Paradigm.Conformance.Issue{
                        property: "parentProp",
                        kind: :missing_property,
-                       details: nil,
+                       details: %{class: "child_class"},
                        node_id: "node1"
                      }
                    ]
@@ -195,7 +195,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      %Paradigm.Conformance.Issue{
                        property: "testProp",
                        kind: :missing_property,
-                       details: nil,
+                       details: %{class: "class1"},
                        node_id: "node1"
                      }
                    ]
@@ -225,7 +225,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                      %Paradigm.Conformance.Issue{
                        property: "extraProp",
                        kind: :unknown_property,
-                       details: nil,
+                       details: %{class: "class1"},
                        node_id: "node1"
                      }
                    ]
