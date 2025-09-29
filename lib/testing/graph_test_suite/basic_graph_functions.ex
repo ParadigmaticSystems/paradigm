@@ -79,9 +79,10 @@ defmodule Paradigm.Graph.TestSuite.BasicGraphFunctions do
 
         graph = build_graph(nodes)
 
-        streamed_nodes = graph
-                          |> Paradigm.Graph.stream_all_nodes()
-                          |> Enum.to_list()
+        streamed_nodes =
+          graph
+          |> Paradigm.Graph.stream_all_nodes()
+          |> Enum.to_list()
 
         assert length(streamed_nodes) == 2
         assert Enum.any?(streamed_nodes, &(&1.id == "node1"))
@@ -113,11 +114,14 @@ defmodule Paradigm.Graph.TestSuite.BasicGraphFunctions do
 
         assert Paradigm.Graph.get_node_data(graph, "node1", "prop1", "default") == "value1"
         assert Paradigm.Graph.get_node_data(graph, "node1", "nonexistent", "default") == "default"
-        assert Paradigm.Graph.get_node_data(graph, "nonexistent_node", "prop1", "default") == "default"
+
+        assert Paradigm.Graph.get_node_data(graph, "nonexistent_node", "prop1", "default") ==
+                 "default"
       end
 
       test "follow_reference works with node references" do
         target_node = %Paradigm.Graph.Node{id: "target", class: "class1", data: %{}}
+
         ref_node = %Paradigm.Graph.Node{
           id: "ref_node",
           class: "class2",

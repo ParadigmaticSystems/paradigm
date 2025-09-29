@@ -20,7 +20,9 @@ defmodule Paradigm.Graph.Canonical do
   @spec to_struct(Paradigm.Graph.t(), Paradigm.Graph.node_id(), MapSet.t()) :: struct() | nil
   defp to_struct(graph, node_id, visited) do
     case Paradigm.Graph.get_node(graph, node_id) do
-      nil -> nil
+      nil ->
+        nil
+
       node ->
         if MapSet.member?(visited, node_id) do
           # Return a cycle marker or the node_id to indicate a cycle
@@ -39,12 +41,14 @@ defmodule Paradigm.Graph.Canonical do
   - Converts nested structs into references
   - Inserts all nodes into the graph
   """
-  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id()) :: Paradigm.Graph.t()
+  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id()) ::
+          Paradigm.Graph.t()
   def struct_to_graph(graph, struct_data, node_id) do
     struct_to_graph(graph, struct_data, node_id, MapSet.new())
   end
 
-  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id(), MapSet.t()) :: Paradigm.Graph.t()
+  @spec struct_to_graph(Paradigm.Graph.t(), struct(), Paradigm.Graph.node_id(), MapSet.t()) ::
+          Paradigm.Graph.t()
   defp struct_to_graph(graph, struct_data, node_id, visited) do
     if MapSet.member?(visited, node_id) do
       graph
@@ -148,5 +152,4 @@ defmodule Paradigm.Graph.Canonical do
   defp atomize_key(key) when is_atom(key), do: key
   defp atomize_key(key) when is_binary(key), do: String.to_atom(key)
   defp atomize_key(key), do: String.to_atom("#{key}")
-
 end

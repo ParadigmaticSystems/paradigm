@@ -17,10 +17,13 @@ defmodule BuiltinsTest do
       graph = Paradigm.Abstraction.embed(paradigm)
 
       {:ok, transformed_graph} =
-        Paradigm.Transform.Identity.transform(graph, Paradigm.Graph.MapGraph.new(graph.metadata), %{})
+        Paradigm.Transform.Identity.transform(
+          graph,
+          Paradigm.Graph.MapGraph.new(graph.metadata),
+          %{}
+        )
 
       assert graph == transformed_graph
     end
-
   end
 end

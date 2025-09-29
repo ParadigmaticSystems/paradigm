@@ -8,6 +8,7 @@ defmodule Paradigm.Graph.FilesystemGraph do
 
   def new(opts \\ []) do
     root = Keyword.get(opts, :root, "/")
+
     %__MODULE__{
       root: Path.expand(root),
       metadata: Keyword.take(opts, [:name, :description])
@@ -34,29 +35,31 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   @impl true
-    def stream_all_nodes(%{root: root_path}) do
-      case File.exists?(root_path) do
-        true ->
-          Stream.resource(
-            fn -> {collect_all_paths(root_path), 0} end,
-            fn {paths, index} ->
-              if index >= length(paths) do
-                {:halt, {paths, index}}
-              else
-                path = Enum.at(paths, index)
-                case get_node(%{root: root_path}, path) do
-                  nil -> {[], {paths, index + 1}}
-                  node -> {[node], {paths, index + 1}}
-                end
+  def stream_all_nodes(%{root: root_path}) do
+    case File.exists?(root_path) do
+      true ->
+        Stream.resource(
+          fn -> {collect_all_paths(root_path), 0} end,
+          fn {paths, index} ->
+            if index >= length(paths) do
+              {:halt, {paths, index}}
+            else
+              path = Enum.at(paths, index)
+
+              case get_node(%{root: root_path}, path) do
+                nil -> {[], {paths, index + 1}}
+                node -> {[node], {paths, index + 1}}
               end
-            end,
-            fn _ -> :ok end
-          )
-        false ->
-          []
-          |> Stream.map(& &1)
-      end
+            end
+          end,
+          fn _ -> :ok end
+        )
+
+      false ->
+        []
+        |> Stream.map(& &1)
     end
+  end
 
   @impl true
   def get_all_classes(_filesystem_graph) do
@@ -70,11 +73,13 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     case File.stat(full_path) do
       {:ok, %File.Stat{type: :regular}} ->
         parent_path = Path.dirname(full_path)
-        owned_by = if parent_path != full_path do
-          make_relative(root_path, parent_path)
-        else
-          nil
-        end
+
+        owned_by =
+          if parent_path != full_path do
+            make_relative(root_path, parent_path)
+          else
+            nil
+          end
 
         %Node{
           id: node_id,
@@ -82,13 +87,16 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
           data: build_file_data(full_path, root_path),
           owned_by: owned_by
         }
+
       {:ok, %File.Stat{type: :directory}} ->
         parent_path = Path.dirname(full_path)
-        owned_by = if parent_path != full_path do
-          make_relative(root_path, parent_path)
-        else
-          nil
-        end
+
+        owned_by =
+          if parent_path != full_path do
+            make_relative(root_path, parent_path)
+          else
+            nil
+          end
 
         %Node{
           id: node_id,
@@ -96,7 +104,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
           data: build_folder_data(full_path, root_path),
           owned_by: owned_by
         }
-      {:error, _} -> nil
+
+      {:error, _} ->
+        nil
     end
   end
 
@@ -116,17 +126,22 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     end)
   end
 
-
   @impl true
-  def insert_node(%{root: root_path} = fs_graph, %Node{id: node_id, class: class_id, data: node_data}) do
+  def insert_node(%{root: root_path} = fs_graph, %Node{
+        id: node_id,
+        class: class_id,
+        data: node_data
+      }) do
     full_path = resolve_path(root_path, node_id)
 
     case class_id do
       "file" ->
         contents = Map.get(node_data, "contents", "")
         File.write(full_path, contents)
+
       "folder" ->
         File.mkdir_p(full_path)
+
       _ ->
         {:error, "Unsupported class: #{class_id}"}
     end
@@ -148,12 +163,16 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
 
     case File.stat(full_path) do
       {:ok, %File.Stat{type: type}} ->
-        data = case type do
-          :regular -> build_file_data(full_path, root_path)
-          :directory -> build_folder_data(full_path, root_path)
-        end
+        data =
+          case type do
+            :regular -> build_file_data(full_path, root_path)
+            :directory -> build_folder_data(full_path, root_path)
+          end
+
         Map.get(data, property_name, default)
-      {:error, _} -> default
+
+      {:error, _} ->
+        default
     end
   end
 
@@ -164,11 +183,13 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     case reference_property do
       "parent" ->
         parent_path = Path.dirname(full_path)
+
         if parent_path != full_path do
           get_node(fs_graph, make_relative(root_path, parent_path))
         else
           nil
         end
+
       "children" ->
         case File.ls(full_path) do
           {:ok, children} ->
@@ -177,9 +198,13 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
               get_node(fs_graph, make_relative(root_path, child_path))
             end)
             |> Enum.reject(&is_nil/1)
-          {:error, _} -> []
+
+          {:error, _} ->
+            []
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -189,8 +214,10 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     case File.stat(root_path) do
       {:ok, %File.Stat{type: :directory}} ->
         walk_directory(root_path, root_path)
+
       {:ok, %File.Stat{type: :regular}} ->
         ["/"]
+
       {:error, _} ->
         []
     end
@@ -201,17 +228,24 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
 
     case File.ls(current_path) do
       {:ok, entries} ->
-        child_paths = Enum.flat_map(entries, fn entry ->
-          entry_path = Path.join(current_path, entry)
-          case File.stat(entry_path) do
-            {:ok, %File.Stat{type: :directory}} ->
-              walk_directory(entry_path, root_path)
-            {:ok, %File.Stat{type: :regular}} ->
-              [make_relative(root_path, entry_path)]
-            _ -> []
-          end
-        end)
+        child_paths =
+          Enum.flat_map(entries, fn entry ->
+            entry_path = Path.join(current_path, entry)
+
+            case File.stat(entry_path) do
+              {:ok, %File.Stat{type: :directory}} ->
+                walk_directory(entry_path, root_path)
+
+              {:ok, %File.Stat{type: :regular}} ->
+                [make_relative(root_path, entry_path)]
+
+              _ ->
+                []
+            end
+          end)
+
         [relative_path | child_paths]
+
       {:error, _} ->
         [relative_path]
     end
@@ -226,23 +260,27 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
 
   defp make_relative(root_path, full_path) do
     case Path.relative_to(full_path, root_path) do
-      ^full_path -> "/"  # Path is not relative to root
+      # Path is not relative to root
+      ^full_path -> "/"
       relative -> "/" <> relative
     end
   end
 
   defp build_file_data(full_path, root_path) do
-    contents = case File.read(full_path) do
-      {:ok, data} -> data
-      {:error, _} -> ""
-    end
+    contents =
+      case File.read(full_path) do
+        {:ok, data} -> data
+        {:error, _} -> ""
+      end
 
     parent_path = Path.dirname(full_path)
-    parent_ref = if parent_path != full_path do
-      %Node.Ref{id: make_relative(root_path, parent_path), composite: false}
-    else
-      nil
-    end
+
+    parent_ref =
+      if parent_path != full_path do
+        %Node.Ref{id: make_relative(root_path, parent_path), composite: false}
+      else
+        nil
+      end
 
     %{
       "name" => Path.basename(full_path),
@@ -253,21 +291,26 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   defp build_folder_data(full_path, root_path) do
-    children_refs = case File.ls(full_path) do
-      {:ok, entries} ->
-        Enum.map(entries, fn entry ->
-          child_path = Path.join(full_path, entry)
-          %Node.Ref{id: make_relative(root_path, child_path), composite: true}
-        end)
-      {:error, _} -> []
-    end
+    children_refs =
+      case File.ls(full_path) do
+        {:ok, entries} ->
+          Enum.map(entries, fn entry ->
+            child_path = Path.join(full_path, entry)
+            %Node.Ref{id: make_relative(root_path, child_path), composite: true}
+          end)
+
+        {:error, _} ->
+          []
+      end
 
     parent_path = Path.dirname(full_path)
-    parent_ref = if parent_path != full_path do
-      %Node.Ref{id: make_relative(root_path, parent_path), composite: true}
-    else
-      nil
-    end
+
+    parent_ref =
+      if parent_path != full_path do
+        %Node.Ref{id: make_relative(root_path, parent_path), composite: true}
+      else
+        nil
+      end
 
     %{
       "name" => Path.basename(full_path),

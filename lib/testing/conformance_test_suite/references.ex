@@ -1,8 +1,6 @@
 defmodule Paradigm.Conformance.TestSuite.References do
-
   defmacro __using__(_opts) do
     quote do
-
       test "validates property references to superclass type" do
         paradigm = %Paradigm{
           classes: %{
@@ -35,11 +33,13 @@ defmodule Paradigm.Conformance.TestSuite.References do
         }
 
         node1 = %Paradigm.Graph.Node{id: "node1", class: "cow", data: %{}}
+
         node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
         }
+
         graph = build_graph([node1, node2])
 
         assert %Paradigm.Conformance.Result{
@@ -83,22 +83,26 @@ defmodule Paradigm.Conformance.TestSuite.References do
 
         # Test direct class match
         node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
+
         node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
         }
+
         graph1 = build_graph([node1, node2])
 
         Paradigm.Conformance.assert_conforms(graph1, paradigm)
 
         # Test subclass match
         truck_node = %Paradigm.Graph.Node{id: "node1", class: "truck", data: %{}}
+
         garage_node = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "node1"}}
         }
+
         graph2 = build_graph([truck_node, garage_node])
 
         Paradigm.Conformance.assert_conforms(graph2, paradigm)
@@ -131,6 +135,7 @@ defmodule Paradigm.Conformance.TestSuite.References do
           class: "garage",
           data: %{"vehicleRef" => %Paradigm.Graph.Node.Ref{id: "nonexistent_node"}}
         }
+
         graph = build_graph(node)
 
         assert %Paradigm.Conformance.Result{
@@ -169,14 +174,22 @@ defmodule Paradigm.Conformance.TestSuite.References do
 
         node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
         node2 = %Paradigm.Graph.Node{id: "node2", class: "vehicle", data: %{}}
+
         node3 = %Paradigm.Graph.Node{
           id: "node3",
           class: "garage",
-          data: %{"vehicleRefs" => [%Paradigm.Graph.Node.Ref{id: "node1"}, %Paradigm.Graph.Node.Ref{id: "node2"}]}
+          data: %{
+            "vehicleRefs" => [
+              %Paradigm.Graph.Node.Ref{id: "node1"},
+              %Paradigm.Graph.Node.Ref{id: "node2"}
+            ]
+          }
         }
-        graph = build_graph(node1)
-                |> Paradigm.Graph.insert_node(node2)
-                |> Paradigm.Graph.insert_node(node3)
+
+        graph =
+          build_graph(node1)
+          |> Paradigm.Graph.insert_node(node2)
+          |> Paradigm.Graph.insert_node(node3)
 
         Paradigm.Conformance.assert_conforms(graph, paradigm)
       end
@@ -204,13 +217,21 @@ defmodule Paradigm.Conformance.TestSuite.References do
         }
 
         node1 = %Paradigm.Graph.Node{id: "node1", class: "vehicle", data: %{}}
+
         node2 = %Paradigm.Graph.Node{
           id: "node2",
           class: "garage",
-          data: %{"vehicleRefs" => [%Paradigm.Graph.Node.Ref{id: "node1"}, %Paradigm.Graph.Node.Ref{id: "missing_node"}]}
+          data: %{
+            "vehicleRefs" => [
+              %Paradigm.Graph.Node.Ref{id: "node1"},
+              %Paradigm.Graph.Node.Ref{id: "missing_node"}
+            ]
+          }
         }
-        graph = build_graph(node1)
-                |> Paradigm.Graph.insert_node(node2)
+
+        graph =
+          build_graph(node1)
+          |> Paradigm.Graph.insert_node(node2)
 
         assert %Paradigm.Conformance.Result{
                  issues: [
@@ -250,20 +271,22 @@ defmodule Paradigm.Conformance.TestSuite.References do
         node = %Paradigm.Graph.Node{
           id: "node1",
           class: "garage",
-          data: %{"vehicleRef" => "not_a_reference"}  # Should be %Paradigm.Graph.Node.Ref{id: "..."}
+          # Should be %Paradigm.Graph.Node.Ref{id: "..."}
+          data: %{"vehicleRef" => "not_a_reference"}
         }
+
         graph = build_graph(node)
 
         assert %Paradigm.Conformance.Result{
-          issues: [
-            %Paradigm.Conformance.Issue{
-              property: "vehicleRef",
-              kind: :expected_reference,
-              details: %{actual_type: "string"},
-              node_id: "node1"
-            }
-          ]
-        } = Paradigm.Conformance.check_graph(graph, paradigm)
+                 issues: [
+                   %Paradigm.Conformance.Issue{
+                     property: "vehicleRef",
+                     kind: :expected_reference,
+                     details: %{actual_type: "string"},
+                     node_id: "node1"
+                   }
+                 ]
+               } = Paradigm.Conformance.check_graph(graph, paradigm)
       end
 
       test "validates external reference to MOF primitive type" do
@@ -292,11 +315,14 @@ defmodule Paradigm.Conformance.TestSuite.References do
         node = %Paradigm.Graph.Node{
           id: "node1",
           class: "property",
-          data: %{"type" => %Paradigm.Graph.Node.ExternalRef{
-            href: "http://schema.omg.org/spec/MOF/2.0/emof.xml#Boolean",
-            type: "emof:PrimitiveType"
-          }}
+          data: %{
+            "type" => %Paradigm.Graph.Node.ExternalRef{
+              href: "http://schema.omg.org/spec/MOF/2.0/emof.xml#Boolean",
+              type: "emof:PrimitiveType"
+            }
+          }
         }
+
         graph = build_graph(node)
 
         Paradigm.Conformance.assert_conforms(graph, paradigm)

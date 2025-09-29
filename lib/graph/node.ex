@@ -43,8 +43,10 @@ defmodule Paradigm.Graph.Node do
           id: id,
           composite: parse_boolean(composite)
         }
+
       nil ->
         %Paradigm.Graph.Node.Ref{id: id}
+
       _ ->
         map
     end

@@ -11,7 +11,7 @@ defmodule Paradigm.Builtin.Metamodel do
       primitive_types: %{
         "boolean" => %PrimitiveType{name: "Boolean"},
         "integer" => %PrimitiveType{name: "Integer"},
-        "string" => %PrimitiveType{name: "String"},
+        "string" => %PrimitiveType{name: "String"}
       },
       packages: %{
         "metamodel_package" => %Package{

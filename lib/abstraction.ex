@@ -10,7 +10,8 @@ defmodule Paradigm.Abstraction do
   Takes any `Paradigm` and produces the corresponding graph that is invariant against the Metamodel paradigm.
   """
   def embed(paradigm, graph \\ nil) do
-    graph = graph || Paradigm.Graph.MapGraph.new(name: paradigm.name, description: paradigm.description)
+    graph =
+      graph || Paradigm.Graph.MapGraph.new(name: paradigm.name, description: paradigm.description)
 
     graph
     |> add_primitive_types(paradigm)
@@ -41,7 +42,8 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => package.name,
         "uri" => package.uri,
-        "nested_packages" => Enum.map(package.nested_packages || [], &%Ref{id: &1, composite: true}),
+        "nested_packages" =>
+          Enum.map(package.nested_packages || [], &%Ref{id: &1, composite: true}),
         "owned_types" => Enum.map(package.owned_types || [], &%Ref{id: &1, composite: true})
       }
 
@@ -60,17 +62,19 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => class.name,
         "is_abstract" => class.is_abstract,
-        "owned_attributes" => Enum.map(class.owned_attributes || [], &%Ref{id: &1, composite: true}),
+        "owned_attributes" =>
+          Enum.map(class.owned_attributes || [], &%Ref{id: &1, composite: true}),
         "super_classes" => Enum.map(class.super_classes || [], &%Ref{id: &1})
       }
 
-      owner_package_id = Enum.find_value(paradigm.packages, fn {package_id, package} ->
-        if Enum.member?(package.owned_types || [], id) do
-          package_id
-        else
-          nil
-        end
-      end)
+      owner_package_id =
+        Enum.find_value(paradigm.packages, fn {package_id, package} ->
+          if Enum.member?(package.owned_types || [], id) do
+            package_id
+          else
+            nil
+          end
+        end)
 
       node = %Node{
         id: id,
@@ -105,20 +109,25 @@ defmodule Paradigm.Abstraction do
       data = %{
         "name" => property.name,
         "is_ordered" => property.is_ordered,
-        "type" => if(property.type, do: %Ref{id: property.type, composite: property.is_composite}, else: nil),
+        "type" =>
+          if(property.type,
+            do: %Ref{id: property.type, composite: property.is_composite},
+            else: nil
+          ),
         "is_composite" => property.is_composite,
         "lower_bound" => property.lower_bound,
         "upper_bound" => property.upper_bound,
         "default_value" => property.default_value
       }
 
-      owner_class_id = Enum.find_value(paradigm.classes, fn {class_id, class} ->
-        if Enum.member?(class.owned_attributes || [], id) do
-          class_id
-        else
-          nil
-        end
-      end)
+      owner_class_id =
+        Enum.find_value(paradigm.classes, fn {class_id, class} ->
+          if Enum.member?(class.owned_attributes || [], id) do
+            class_id
+          else
+            nil
+          end
+        end)
 
       node = %Node{
         id: id,
@@ -215,6 +224,7 @@ defmodule Paradigm.Abstraction do
   end
 
   defp extract_ref_ids(nil), do: []
+
   defp extract_ref_ids(refs) when is_list(refs) do
     Enum.map(refs, fn
       %Ref{id: id} -> id

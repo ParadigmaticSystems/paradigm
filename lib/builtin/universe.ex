@@ -7,7 +7,8 @@ defmodule Paradigm.Builtin.Universe do
   def definition do
     %Paradigm{
       name: "Universe",
-      description: "A meta-paradigm in which graphs are primitive types, and we model the abstraction and transform relationships between them.",
+      description:
+        "A meta-paradigm in which graphs are primitive types, and we model the abstraction and transform relationships between them.",
       primitive_types: %{
         "string" => %PrimitiveType{name: "String"},
         "graph" => %PrimitiveType{name: "Paradigm.Graph"},
@@ -24,20 +25,35 @@ defmodule Paradigm.Builtin.Universe do
       classes: %{
         "registered_graph" => %Class{
           name: "RegisteredGraph",
-          owned_attributes: ["graph_name", "graph"],
+          owned_attributes: ["graph_name", "graph"]
         },
         "instantiation" => %Class{
           name: "Instantiation",
-          owned_attributes: ["instantiation_paradigm", "instantiation_instance", "instantiation_conformance_result"],
+          owned_attributes: [
+            "instantiation_paradigm",
+            "instantiation_instance",
+            "instantiation_conformance_result"
+          ]
         },
         "transform" => %Class{
           name: "Transform",
           super_classes: [],
-          owned_attributes: ["transform_name", "transform_module", "source_paradigm", "target_paradigm"]
+          owned_attributes: [
+            "transform_name",
+            "transform_module",
+            "source_paradigm",
+            "target_paradigm"
+          ]
         },
         "transform_instance" => %Class{
           name: "TransformInstance",
-          owned_attributes: ["transform", "transform_source", "transform_target", "transform_errors", "transform_warnings"]
+          owned_attributes: [
+            "transform",
+            "transform_source",
+            "transform_target",
+            "transform_errors",
+            "transform_warnings"
+          ]
         }
       },
       properties: %{

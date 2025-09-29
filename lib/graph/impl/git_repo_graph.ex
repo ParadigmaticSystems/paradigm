@@ -9,6 +9,7 @@ defmodule Paradigm.Graph.GitRepoGraph do
   def new(opts \\ []) do
     root = Keyword.get(opts, :root, "/")
     current_revision = Keyword.get(opts, :current_revision, "HEAD")
+
     %__MODULE__{
       root: Path.expand(root),
       current_revision: current_revision,
@@ -18,6 +19,7 @@ defmodule Paradigm.Graph.GitRepoGraph do
 
   def new(root_path, opts) when is_binary(root_path) and is_list(opts) do
     current_revision = Keyword.get(opts, :current_revision, "HEAD")
+
     %__MODULE__{
       root: Path.expand(root_path),
       current_revision: current_revision,
@@ -62,6 +64,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
           |> Stream.map(&get_node(git_graph, &1))
         ])
         |> Stream.reject(&is_nil/1)
+
       false ->
         []
         |> Stream.map(& &1)
@@ -83,10 +86,14 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
           data: build_repository_data(root_path),
           owned_by: nil
         }
+
       String.starts_with?(node_id, "commit:") ->
         commit_hash = String.replace_prefix(node_id, "commit:", "")
+
         case get_commit_info(root_path, commit_hash) do
-          nil -> nil
+          nil ->
+            nil
+
           commit_info ->
             %Node{
               id: node_id,
@@ -95,10 +102,14 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               owned_by: "repository"
             }
         end
+
       String.starts_with?(node_id, "branch:") ->
         branch_name = String.replace_prefix(node_id, "branch:", "")
+
         case get_branch_info(root_path, branch_name) do
-          nil -> nil
+          nil ->
+            nil
+
           branch_info ->
             %Node{
               id: node_id,
@@ -107,10 +118,14 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               owned_by: "repository"
             }
         end
+
       String.starts_with?(node_id, "tag:") ->
         tag_name = String.replace_prefix(node_id, "tag:", "")
+
         case get_tag_info(root_path, tag_name) do
-          nil -> nil
+          nil ->
+            nil
+
           tag_info ->
             %Node{
               id: node_id,
@@ -119,7 +134,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
               owned_by: "repository"
             }
         end
-      true -> nil
+
+      true ->
+        nil
     end
   end
 
@@ -139,19 +156,27 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   end
 
   @impl true
-  def insert_node(%{root: root_path} = git_graph, %Node{id: node_id, class: class_id, data: _node_data}) do
+  def insert_node(%{root: root_path} = git_graph, %Node{
+        id: node_id,
+        class: class_id,
+        data: _node_data
+      }) do
     case class_id do
       "repository" ->
         # Initialize git repository
         run_git_cmd(["init"], root_path)
+
       "commit" ->
         {:error, "Cannot insert commits directly"}
+
       "branch" ->
         branch_name = String.replace_prefix(node_id, "branch:", "")
         run_git_cmd(["checkout", "-b", branch_name], root_path)
+
       "tag" ->
         tag_name = String.replace_prefix(node_id, "tag:", "")
         run_git_cmd(["tag", tag_name], root_path)
+
       _ ->
         {:error, "Unsupported class: #{class_id}"}
     end
@@ -169,7 +194,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   @impl true
   def get_node_data(%{root: root_path}, node_id, property_name) do
     case get_node(%{root: root_path}, node_id) do
-      nil -> :error
+      nil ->
+        :error
+
       node ->
         case Map.fetch(node.data, property_name) do
           {:ok, value} -> {:ok, value}
@@ -207,6 +234,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {branch_id, "head"} ->
         if String.starts_with?(branch_id, "branch:") do
           branch_name = String.replace_prefix(branch_id, "branch:", "")
+
           case get_branch_head(root_path, branch_name) do
             nil -> nil
             commit_hash -> get_node(git_graph, "commit:#{commit_hash}")
@@ -218,6 +246,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {tag_id, "commit"} ->
         if String.starts_with?(tag_id, "tag:") do
           tag_name = String.replace_prefix(tag_id, "tag:", "")
+
           case get_tag_commit(root_path, tag_name) do
             nil -> nil
             commit_hash -> get_node(git_graph, "commit:#{commit_hash}")
@@ -229,6 +258,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {commit_id, "parents"} ->
         if String.starts_with?(commit_id, "commit:") do
           commit_hash = String.replace_prefix(commit_id, "commit:", "")
+
           get_commit_parents(root_path, commit_hash)
           |> Enum.map(&get_node(git_graph, "commit:#{&1}"))
           |> Enum.reject(&is_nil/1)
@@ -236,7 +266,8 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
           nil
         end
 
-      _ -> nil
+      _ ->
+        nil
     end
   end
 
@@ -254,16 +285,19 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
     nodes = ["repository"]
 
     # Add all commits
-    commit_nodes = get_all_commit_hashes(root_path)
-    |> Enum.map(&("commit:" <> &1))
+    commit_nodes =
+      get_all_commit_hashes(root_path)
+      |> Enum.map(&("commit:" <> &1))
 
     # Add all branches
-    branch_nodes = get_all_branches(root_path)
-    |> Enum.map(&("branch:" <> &1))
+    branch_nodes =
+      get_all_branches(root_path)
+      |> Enum.map(&("branch:" <> &1))
 
     # Add all tags
-    tag_nodes = get_all_tags(root_path)
-    |> Enum.map(&("tag:" <> &1))
+    tag_nodes =
+      get_all_tags(root_path)
+      |> Enum.map(&("tag:" <> &1))
 
     nodes ++ commit_nodes ++ branch_nodes ++ tag_nodes
   end
@@ -273,16 +307,21 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
 
     %{
       "name" => repo_name,
-      "branches" => get_all_branches(root_path) |> Enum.map(&%Node.Ref{id: "branch:#{&1}", composite: true}),
+      "branches" =>
+        get_all_branches(root_path) |> Enum.map(&%Node.Ref{id: "branch:#{&1}", composite: true}),
       "tags" => get_all_tags(root_path) |> Enum.map(&%Node.Ref{id: "tag:#{&1}", composite: true}),
-      "commits" => get_all_commit_hashes(root_path) |> Enum.map(&%Node.Ref{id: "commit:#{&1}", composite: true})
+      "commits" =>
+        get_all_commit_hashes(root_path)
+        |> Enum.map(&%Node.Ref{id: "commit:#{&1}", composite: true})
     }
   end
 
   defp build_commit_data(root_path, commit_info) do
     filesystem_graph = build_filesystem_graph_for_commit(root_path, commit_info.hash)
-    parent_refs = get_commit_parents(root_path, commit_info.hash)
-    |> Enum.map(&%Node.Ref{id: "commit:#{&1}", composite: false})
+
+    parent_refs =
+      get_commit_parents(root_path, commit_info.hash)
+      |> Enum.map(&%Node.Ref{id: "commit:#{&1}", composite: false})
 
     %{
       "hash" => commit_info.hash,
@@ -317,7 +356,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {output, 0} ->
         output
         |> String.split("\n", trim: true)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -327,7 +368,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
         output
         |> String.split("\n", trim: true)
         |> Enum.reject(&String.starts_with?(&1, "origin/"))
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -336,7 +379,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {output, 0} ->
         output
         |> String.split("\n", trim: true)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -345,7 +390,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {output, 0} ->
         [hash, message, author, date] = String.split(String.trim(output), "|", parts: 4)
         %{hash: hash, message: message, author: author, date: date}
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -382,13 +429,15 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
       {output, 0} ->
         [_commit | parents] = String.split(String.trim(output), " ")
         parents
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
   defp build_filesystem_graph_for_commit(root_path, commit_hash) do
     # Create a temporary directory to checkout the commit
-    temp_dir = System.tmp_dir!() |> Path.join("git_checkout_#{:rand.uniform(1000000)}")
+    temp_dir = System.tmp_dir!() |> Path.join("git_checkout_#{:rand.uniform(1_000_000)}")
 
     try do
       # Clone and checkout the specific commit in temp directory
@@ -398,9 +447,13 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
             {_, 0} ->
               # Create a filesystem graph for this checkout
               Paradigm.Graph.FilesystemGraph.new(root: temp_dir)
-            _ -> %{}
+
+            _ ->
+              %{}
           end
-        _ -> %{}
+
+        _ ->
+          %{}
       end
     after
       File.rm_rf(temp_dir)

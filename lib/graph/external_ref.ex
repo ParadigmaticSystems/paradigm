@@ -3,9 +3,9 @@ defmodule Paradigm.Graph.Node.ExternalRef do
   A reference to an element outside the current graph/model.
   """
   @type t :: %__MODULE__{
-    href: String.t(),
-    type: String.t() | nil
-  }
+          href: String.t(),
+          type: String.t() | nil
+        }
 
   defstruct [:href, :type]
 

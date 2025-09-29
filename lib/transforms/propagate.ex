@@ -29,20 +29,26 @@ defmodule Paradigm.Transform.Propagate do
 
   defp update_conformance_check_if_needed(universe, instantiation_node_id) do
     instantiation_node = Paradigm.Graph.get_node(universe, instantiation_node_id)
+
     case instantiation_node.data["conformance_result"] do
       nil ->
         conformance_result = do_conformance_check(universe, instantiation_node_id)
         updated_data = Map.put(instantiation_node.data, "conformance_result", conformance_result)
         updated_node = %Node{instantiation_node | data: updated_data}
         Paradigm.Graph.insert_node(universe, updated_node)
+
       _ ->
         universe
     end
   end
 
   defp do_conformance_check(universe, instantiation_node_id) do
-    paradigm_graph_node = Paradigm.Graph.follow_reference(universe, instantiation_node_id, "paradigm")
-    instance_graph_node = Paradigm.Graph.follow_reference(universe, instantiation_node_id, "instance")
+    paradigm_graph_node =
+      Paradigm.Graph.follow_reference(universe, instantiation_node_id, "paradigm")
+
+    instance_graph_node =
+      Paradigm.Graph.follow_reference(universe, instantiation_node_id, "instance")
+
     paradigm = paradigm_graph_node.data["graph"]
     instance_graph = instance_graph_node.data["graph"]
     Paradigm.Conformance.check_graph(instance_graph, paradigm)
@@ -54,19 +60,26 @@ defmodule Paradigm.Transform.Propagate do
     # Find registered_graph_instance nodes that have this transform's source as their paradigm
     instantiation_node_ids = Paradigm.Graph.get_all_nodes_of_class(universe, "instantiation")
     instantiation_nodes = Enum.map(instantiation_node_ids, &Paradigm.Graph.get_node(universe, &1))
-    matching_instance_ids = Enum.filter(instantiation_nodes, fn instantiation_node ->
-      %Ref{id: paradigm_id} = instantiation_node.data["paradigm"]
-      paradigm_id == source_paradigm_id and instantiation_node.data["conformance_result"] == %Paradigm.Conformance.Result{issues: []}
-    end)
-    |> Enum.map(fn instantiation_node ->
-      %Ref{id: instance_id} = instantiation_node.data["instance"]
-      instance_id
-    end)
+
+    matching_instance_ids =
+      Enum.filter(instantiation_nodes, fn instantiation_node ->
+        %Ref{id: paradigm_id} = instantiation_node.data["paradigm"]
+
+        paradigm_id == source_paradigm_id and
+          instantiation_node.data["conformance_result"] == %Paradigm.Conformance.Result{
+            issues: []
+          }
+      end)
+      |> Enum.map(fn instantiation_node ->
+        %Ref{id: instance_id} = instantiation_node.data["instance"]
+        instance_id
+      end)
 
     Enum.reduce(matching_instance_ids, universe, fn instance_id, acc_graph ->
       case find_existing_transform_instance(acc_graph, transform_node_id, instance_id) do
         nil ->
           create_transform_instance(acc_graph, transform_node_id, instance_id)
+
         _existing ->
           acc_graph
       end
@@ -88,10 +101,19 @@ defmodule Paradigm.Transform.Propagate do
     transform_node = Paradigm.Graph.get_node(universe, transform_node_id)
     registered_graph = Paradigm.Graph.get_node(universe, source_graph_id)
     source_graph = registered_graph.data["graph"]
-    {:ok, result_graph} = apply(transform_node.data["module"], :transform, [source_graph, Paradigm.Graph.MapGraph.new(source_graph.metadata), %{}])
+
+    {:ok, result_graph} =
+      apply(transform_node.data["module"], :transform, [
+        source_graph,
+        Paradigm.Graph.MapGraph.new(source_graph.metadata),
+        %{}
+      ])
+
     target_id = Paradigm.Universe.generate_graph_id(result_graph)
 
-    transform_instance_id = "#{transform_node.data["name"]}_from_#{source_graph_id}_to_#{target_id}"
+    transform_instance_id =
+      "#{transform_node.data["name"]}_from_#{source_graph_id}_to_#{target_id}"
+
     transform_instance_node = %Node{
       id: transform_instance_id,
       class: "transform_instance",
@@ -105,8 +127,10 @@ defmodule Paradigm.Transform.Propagate do
     }
 
     Paradigm.Graph.insert_node(universe, transform_instance_node)
-    |> Paradigm.Universe.insert_graph_with_paradigm(result_graph, registered_graph.data["name"], transform_node.data["target"].id)
-
+    |> Paradigm.Universe.insert_graph_with_paradigm(
+      result_graph,
+      registered_graph.data["name"],
+      transform_node.data["target"].id
+    )
   end
-
 end

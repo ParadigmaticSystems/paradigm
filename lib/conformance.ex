@@ -51,6 +51,7 @@ defmodule Paradigm.Conformance do
     case check_graph(graph, paradigm) do
       %Paradigm.Conformance.Result{issues: []} ->
         graph
+
       %Paradigm.Conformance.Result{issues: issues} ->
         raise format_error_message(issues)
     end
@@ -71,6 +72,7 @@ defmodule Paradigm.Conformance do
 
   @spec check_graph(any(), %Paradigm{} | Graph.t(), integer()) :: Result.t()
   def check_graph(graph, paradigm, cutoff \\ 50)
+
   def check_graph(graph, %Paradigm{} = paradigm, cutoff) do
     issues =
       Paradigm.Graph.stream_all_nodes(graph)
@@ -86,21 +88,35 @@ defmodule Paradigm.Conformance do
     check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph), cutoff)
   end
 
-
   defp validate_node(node, paradigm, graph) do
     with {:ok, class} <- get_class_safe(paradigm, node.class) do
-      abstract_class_issues = if class.is_abstract do
-        [%Issue{kind: :abstract_class_instantiated, node_id: node.id, property: nil, details: %{class: node.class}}]
-      else
-        []
-      end
+      abstract_class_issues =
+        if class.is_abstract do
+          [
+            %Issue{
+              kind: :abstract_class_instantiated,
+              node_id: node.id,
+              property: nil,
+              details: %{class: node.class}
+            }
+          ]
+        else
+          []
+        end
 
       property_issues = validate_node_properties(node, node.id, paradigm, graph)
 
       abstract_class_issues ++ property_issues
     else
       {:error, :invalid_class} ->
-        [%Issue{kind: :invalid_class, node_id: node.id, property: nil, details: %{class: node.class}}]
+        [
+          %Issue{
+            kind: :invalid_class,
+            node_id: node.id,
+            property: nil,
+            details: %{class: node.class}
+          }
+        ]
     end
   end
 
@@ -125,11 +141,25 @@ defmodule Paradigm.Conformance do
 
     missing_issues =
       MapSet.difference(required_names, data_keys)
-      |> Enum.map(&%Issue{kind: :missing_property, node_id: node_id, property: &1, details: %{class: node.class}})
+      |> Enum.map(
+        &%Issue{
+          kind: :missing_property,
+          node_id: node_id,
+          property: &1,
+          details: %{class: node.class}
+        }
+      )
 
     unknown_issues =
       MapSet.difference(data_keys, property_names)
-      |> Enum.map(&%Issue{kind: :unknown_property, node_id: node_id, property: &1, details: %{class: node.class}})
+      |> Enum.map(
+        &%Issue{
+          kind: :unknown_property,
+          node_id: node_id,
+          property: &1,
+          details: %{class: node.class}
+        }
+      )
 
     missing_issues ++ unknown_issues
   end
@@ -229,72 +259,82 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_single_reference(node_id, property, %Ref{id: referenced_id, composite: composite_flag}, paradigm, graph) do
+  defp validate_single_reference(
+         node_id,
+         property,
+         %Ref{id: referenced_id, composite: composite_flag},
+         paradigm,
+         graph
+       ) do
     issues = []
 
     # Check if reference exists
-    ref_exists_issues = case get_node_safe(graph, referenced_id) do
-      {:error, :node_not_found} ->
+    ref_exists_issues =
+      case get_node_safe(graph, referenced_id) do
+        {:error, :node_not_found} ->
+          [
+            %Issue{
+              kind: :references_missing_node,
+              node_id: node_id,
+              property: property.name,
+              details: %{referenced_id: referenced_id}
+            }
+          ]
+
+        {:ok, referenced_node} ->
+          if valid_class_reference?(referenced_node.class, property.type, paradigm) do
+            []
+          else
+            [
+              %Issue{
+                kind: :references_wrong_class,
+                node_id: node_id,
+                property: property.name,
+                details: %{class: referenced_node.class}
+              }
+            ]
+          end
+      end
+
+    # Check composite flag consistency
+    composite_flag_issues =
+      if property.is_composite and not composite_flag do
         [
           %Issue{
-            kind: :references_missing_node,
+            kind: :composite_reference_without_flag,
             node_id: node_id,
             property: property.name,
             details: %{referenced_id: referenced_id}
           }
         ]
-
-      {:ok, referenced_node} ->
-        if valid_class_reference?(referenced_node.class, property.type, paradigm) do
-          []
-        else
-          [
-            %Issue{
-              kind: :references_wrong_class,
-              node_id: node_id,
-              property: property.name,
-              details: %{class: referenced_node.class}
-            }
-          ]
-        end
-    end
-
-    # Check composite flag consistency
-    composite_flag_issues = if property.is_composite and not composite_flag do
-      [
-        %Issue{
-          kind: :composite_reference_without_flag,
-          node_id: node_id,
-          property: property.name,
-          details: %{referenced_id: referenced_id}
-        }
-      ]
-    else
-      []
-    end
+      else
+        []
+      end
 
     # Check composite ownership integrity
-    composite_ownership_issues = if property.is_composite do
-      case get_node_safe(graph, referenced_id) do
-        {:ok, referenced_node} ->
-          if is_nil(referenced_node.owned_by) do
-            [
-              %Issue{
-                kind: :composite_owned_node_without_owner,
-                node_id: referenced_id,
-                property: property.name,
-                details: %{owner_node_id: node_id}
-              }
-            ]
-          else
+    composite_ownership_issues =
+      if property.is_composite do
+        case get_node_safe(graph, referenced_id) do
+          {:ok, referenced_node} ->
+            if is_nil(referenced_node.owned_by) do
+              [
+                %Issue{
+                  kind: :composite_owned_node_without_owner,
+                  node_id: referenced_id,
+                  property: property.name,
+                  details: %{owner_node_id: node_id}
+                }
+              ]
+            else
+              []
+            end
+
+          _ ->
             []
-          end
-        _ ->
-          []
+        end
+      else
+        []
       end
-    else
-      []
-    end
 
     issues ++ ref_exists_issues ++ composite_flag_issues ++ composite_ownership_issues
   end
@@ -375,9 +415,14 @@ defmodule Paradigm.Conformance do
         refs = extract_refs(value)
 
         Enum.reduce(refs, acc, fn %Ref{id: referenced_id}, inner_acc ->
-          Map.update(inner_acc, referenced_id, [{owner_node_id, property_name, owner_node_id}], fn existing_owners ->
-            [{owner_node_id, property_name, hd(existing_owners) |> elem(2)} | existing_owners]
-          end)
+          Map.update(
+            inner_acc,
+            referenced_id,
+            [{owner_node_id, property_name, owner_node_id}],
+            fn existing_owners ->
+              [{owner_node_id, property_name, hd(existing_owners) |> elem(2)} | existing_owners]
+            end
+          )
         end)
 
       _ ->

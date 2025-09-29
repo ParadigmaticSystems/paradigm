@@ -1,5 +1,6 @@
 defmodule Paradigm.Graph.Diff do
   alias Paradigm.Graph
+
   @doc """
   Computes the difference between two graphs, capturing missing nodes, added nodes, and changed attributes.
 
@@ -9,17 +10,19 @@ defmodule Paradigm.Graph.Diff do
   - `:changed` - map of node_id => %{class: %{old: class, new: class}, data: %{key => %{old: value, new: value}}} for nodes with different attributes or class
   """
   @spec diff(Graph.t(), Graph.t()) :: %{
-    added: [Graph.node_id()],
-    removed: [Graph.node_id()],
-    changed: %{Graph.node_id() => map()}
-  }
+          added: [Graph.node_id()],
+          removed: [Graph.node_id()],
+          changed: %{Graph.node_id() => map()}
+        }
   def diff(old_graph, new_graph) do
-    old_nodes_map = Graph.stream_all_nodes(old_graph)
+    old_nodes_map =
+      Graph.stream_all_nodes(old_graph)
       |> Enum.reduce(%{}, fn node, acc ->
         Map.put(acc, node.id, node)
       end)
 
-    new_nodes_map = Graph.stream_all_nodes(new_graph)
+    new_nodes_map =
+      Graph.stream_all_nodes(new_graph)
       |> Enum.reduce(%{}, fn node, acc ->
         Map.put(acc, node.id, node)
       end)
@@ -32,7 +35,8 @@ defmodule Paradigm.Graph.Diff do
 
     common_nodes = MapSet.intersection(old_node_ids, new_node_ids)
 
-    changed = common_nodes
+    changed =
+      common_nodes
       |> Enum.reduce(%{}, fn node_id, acc ->
         old_node = Map.get(old_nodes_map, node_id)
         new_node = Map.get(new_nodes_map, node_id)
@@ -55,18 +59,20 @@ defmodule Paradigm.Graph.Diff do
   defp compute_node_diff(old_node, new_node) do
     diff = %{}
 
-    diff = if old_node.class != new_node.class do
-      Map.put(diff, :class, %{old: old_node.class, new: new_node.class})
-    else
-      diff
-    end
+    diff =
+      if old_node.class != new_node.class do
+        Map.put(diff, :class, %{old: old_node.class, new: new_node.class})
+      else
+        diff
+      end
 
     old_data = old_node.data || %{}
     new_data = new_node.data || %{}
 
     all_keys = MapSet.union(MapSet.new(Map.keys(old_data)), MapSet.new(Map.keys(new_data)))
 
-    data_changes = all_keys
+    data_changes =
+      all_keys
       |> Enum.reduce(%{}, fn key, acc ->
         old_value = Map.fetch(old_data, key)
         new_value = Map.fetch(new_data, key)
@@ -106,32 +112,41 @@ defmodule Paradigm.Graph.Diff do
   defp format_differences(differences) do
     parts = []
 
-    parts = if differences.added != [] do
-      added_section = "Added nodes:\n" <>
-        Enum.map_join(differences.added, "\n", fn node_id -> "  - #{node_id}" end)
-      [added_section | parts]
-    else
-      parts
-    end
+    parts =
+      if differences.added != [] do
+        added_section =
+          "Added nodes:\n" <>
+            Enum.map_join(differences.added, "\n", fn node_id -> "  - #{node_id}" end)
 
-    parts = if differences.removed != [] do
-      removed_section = "Removed nodes:\n" <>
-        Enum.map_join(differences.removed, "\n", fn node_id -> "  - #{node_id}" end)
-      [removed_section | parts]
-    else
-      parts
-    end
+        [added_section | parts]
+      else
+        parts
+      end
 
-    parts = if differences.changed != %{} do
-      changed_section = "Changed nodes:\n" <>
-        Enum.map_join(differences.changed, "\n", fn {node_id, changes} ->
-          node_changes = format_node_changes(changes)
-          "  - #{node_id}:\n#{node_changes}"
-        end)
-      [changed_section | parts]
-    else
-      parts
-    end
+    parts =
+      if differences.removed != [] do
+        removed_section =
+          "Removed nodes:\n" <>
+            Enum.map_join(differences.removed, "\n", fn node_id -> "  - #{node_id}" end)
+
+        [removed_section | parts]
+      else
+        parts
+      end
+
+    parts =
+      if differences.changed != %{} do
+        changed_section =
+          "Changed nodes:\n" <>
+            Enum.map_join(differences.changed, "\n", fn {node_id, changes} ->
+              node_changes = format_node_changes(changes)
+              "  - #{node_id}:\n#{node_changes}"
+            end)
+
+        [changed_section | parts]
+      else
+        parts
+      end
 
     Enum.reverse(parts) |> Enum.join("\n\n")
   end
@@ -139,25 +154,29 @@ defmodule Paradigm.Graph.Diff do
   defp format_node_changes(changes) do
     parts = []
 
-    parts = if Map.has_key?(changes, :class) do
-      class_change = changes.class
-      class_section = "    class: #{inspect(class_change.old)} → #{inspect(class_change.new)}"
-      [class_section | parts]
-    else
-      parts
-    end
+    parts =
+      if Map.has_key?(changes, :class) do
+        class_change = changes.class
+        class_section = "    class: #{inspect(class_change.old)} → #{inspect(class_change.new)}"
+        [class_section | parts]
+      else
+        parts
+      end
 
-    parts = if Map.has_key?(changes, :data) do
-      data_changes = changes.data
-      data_section = Enum.map_join(data_changes, "\n", fn {key, %{old: old_val, new: new_val}} ->
-        "    #{key}: #{inspect(old_val)} → #{inspect(new_val)}"
-      end)
-      [data_section | parts]
-    else
-      parts
-    end
+    parts =
+      if Map.has_key?(changes, :data) do
+        data_changes = changes.data
+
+        data_section =
+          Enum.map_join(data_changes, "\n", fn {key, %{old: old_val, new: new_val}} ->
+            "    #{key}: #{inspect(old_val)} → #{inspect(new_val)}"
+          end)
+
+        [data_section | parts]
+      else
+        parts
+      end
 
     Enum.reverse(parts) |> Enum.join("\n")
   end
-
 end

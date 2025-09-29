@@ -45,11 +45,13 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
 
   @impl true
   def insert_nodes(%{nodes: graph} = map_graph, nodes) when is_list(nodes) do
-    new_graph = Enum.reduce(nodes, graph, fn %Node{id: id, data: data} = node, acc ->
-      normalized_data = normalize_keys_to_strings(data)
-      normalized_node = %{node | data: normalized_data}
-      Map.put(acc, id, normalized_node)
-    end)
+    new_graph =
+      Enum.reduce(nodes, graph, fn %Node{id: id, data: data} = node, acc ->
+        normalized_data = normalize_keys_to_strings(data)
+        normalized_node = %{node | data: normalized_data}
+        Map.put(acc, id, normalized_node)
+      end)
+
     %{map_graph | nodes: new_graph}
   end
 
@@ -73,7 +75,9 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
           {:ok, value} -> {:ok, value}
           :error -> :error
         end
-      nil -> :error
+
+      nil ->
+        :error
     end
   end
 

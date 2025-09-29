@@ -3,6 +3,7 @@ defmodule Paradigm.Builtin.Filesystem do
   The filesystem model.
   """
   alias Paradigm.{Package, Class, Property, PrimitiveType}
+
   def definition do
     %Paradigm{
       name: "Filesystem",

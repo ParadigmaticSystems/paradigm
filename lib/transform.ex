@@ -11,7 +11,6 @@ defmodule Paradigm.Transform do
               opts :: keyword()
             ) :: transform_result
 
-
   ## Helper functions for common transformation patterns
   #
   def apply_class_transforms(source, target, transformations) do
@@ -71,8 +70,12 @@ defmodule Paradigm.Transform do
 
   defp call_transform_fn(transform_fn, node_id, node_data, context) do
     case :erlang.fun_info(transform_fn, :arity) do
-      {:arity, 2} -> transform_fn.(node_id, node_data)
-      {:arity, 3} -> transform_fn.(node_id, node_data, context)
+      {:arity, 2} ->
+        transform_fn.(node_id, node_data)
+
+      {:arity, 3} ->
+        transform_fn.(node_id, node_data, context)
+
       {:arity, arity} ->
         {:error, "Unsupported transform function arity: #{arity}. Expected 2 or 3."}
     end

@@ -27,7 +27,6 @@ defmodule Paradigm.GraphTestSuite do
 
       use Paradigm.Graph.TestSuite.BasicGraphFunctions
       use Paradigm.Graph.TestSuite.DiffTests
-
     end
   end
 end

@@ -15,7 +15,12 @@ defmodule Paradigm.MixProject do
         extras: ["README.md"],
         logo: "assets/logo.svg",
         favicon: "assets/favicon.png",
-        nest_modules_by_prefix: [Paradigm.Conformance, Paradigm.Graph, Paradigm.Canonical, Paradigm.Transform],
+        nest_modules_by_prefix: [
+          Paradigm.Conformance,
+          Paradigm.Graph,
+          Paradigm.Canonical,
+          Paradigm.Transform
+        ],
         groups_for_modules: [
           "Paradigm Data Types": [
             Paradigm,

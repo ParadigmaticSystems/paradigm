@@ -62,15 +62,19 @@ defmodule Paradigm.Universe do
   end
 
   def register_transform_by_name(universe, module, from_name, to_name) do
-    register_transform(universe, module,
+    register_transform(
+      universe,
+      module,
       find_by_name(universe, from_name),
-      find_by_name(universe, to_name))
+      find_by_name(universe, to_name)
+    )
   end
 
   def bootstrap(name \\ "universe_model", description \\ "Test universe") do
     metamodel = Paradigm.Builtin.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
+
     Paradigm.Graph.MapGraph.new(name: name, description: description)
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
     |> apply_propagate()
@@ -78,12 +82,15 @@ defmodule Paradigm.Universe do
 
   def get_paradigm_for(universe, node_id) do
     instantiations = Graph.get_all_nodes_of_class(universe, "instantiation")
-    registered_paradigm_graph = Enum.find_value(instantiations, fn inst_node_id ->
-      inst_node = Graph.get_node(universe, inst_node_id)
-      if inst_node.data["instance"].id == node_id do
-        Graph.get_node(universe, inst_node.data["paradigm"].id)
-      end
-    end)
+
+    registered_paradigm_graph =
+      Enum.find_value(instantiations, fn inst_node_id ->
+        inst_node = Graph.get_node(universe, inst_node_id)
+
+        if inst_node.data["instance"].id == node_id do
+          Graph.get_node(universe, inst_node.data["paradigm"].id)
+        end
+      end)
 
     if registered_paradigm_graph do
       Paradigm.Abstraction.extract(registered_paradigm_graph.data["graph"])
@@ -124,10 +131,9 @@ defmodule Paradigm.Universe do
   end
 
   def get_transform_pairs(universe) do
-    #Returns tuples of source_id, target_id for all transforms that have occured.
+    # Returns tuples of source_id, target_id for all transforms that have occured.
     Paradigm.Graph.get_all_nodes_of_class(universe, "transform_instance")
     |> Enum.map(&Paradigm.Graph.get_node(universe, &1))
     |> Enum.map(fn node -> {node.data["source"].id, node.data["target"].id} end)
   end
-
 end

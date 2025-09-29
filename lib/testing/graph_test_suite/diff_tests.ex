@@ -1,16 +1,33 @@
 defmodule Paradigm.Graph.TestSuite.DiffTests do
-
   defmacro __using__(_opts) do
     quote do
       describe "diff/2" do
         test "returns empty Paradigm.Graph.Diff for identical Paradigm.Graphs" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node2", class: "class2", data: %{"key" => "value2"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node2",
+              class: "class2",
+              data: %{"key" => "value2"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node2", class: "class2", data: %{"key" => "value2"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node2",
+              class: "class2",
+              data: %{"key" => "value2"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
@@ -20,12 +37,26 @@ defmodule Paradigm.Graph.TestSuite.DiffTests do
         end
 
         test "detects added nodes" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node2", class: "class2", data: %{"key" => "value2"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node2",
+              class: "class2",
+              data: %{"key" => "value2"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
@@ -35,12 +66,26 @@ defmodule Paradigm.Graph.TestSuite.DiffTests do
         end
 
         test "detects removed nodes" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node2", class: "class2", data: %{"key" => "value2"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node2",
+              class: "class2",
+              data: %{"key" => "value2"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
@@ -50,102 +95,157 @@ defmodule Paradigm.Graph.TestSuite.DiffTests do
         end
 
         test "detects class changes" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class2", data: %{"key" => "value"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class2",
+              data: %{"key" => "value"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              class: %{old: "class1", new: "class2"}
-            }
-          }
+                   "node1" => %{
+                     class: %{old: "class1", new: "class2"}
+                   }
+                 }
         end
 
         test "detects data changes" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "old_value"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "old_value"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "new_value"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "new_value"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              data: %{
-                "key" => %{old: "old_value", new: "new_value"}
-              }
-            }
-          }
+                   "node1" => %{
+                     data: %{
+                       "key" => %{old: "old_value", new: "new_value"}
+                     }
+                   }
+                 }
         end
 
         test "detects added data keys" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key1" => "value1"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key1" => "value1"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key1" => "value1", "key2" => "value2"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key1" => "value1", "key2" => "value2"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              data: %{
-                "key2" => %{old: "MISSING VALUE", new: "value2"}
-              }
-            }
-          }
+                   "node1" => %{
+                     data: %{
+                       "key2" => %{old: "MISSING VALUE", new: "value2"}
+                     }
+                   }
+                 }
         end
 
         test "detects removed data keys" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key1" => "value1", "key2" => "value2"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key1" => "value1", "key2" => "value2"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key1" => "value1"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key1" => "value1"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              data: %{
-                "key2" => %{old: "value2", new: "MISSING VALUE"}
-              }
-            }
-          }
+                   "node1" => %{
+                     data: %{
+                       "key2" => %{old: "value2", new: "MISSING VALUE"}
+                     }
+                   }
+                 }
         end
 
         test "detects both class and data changes" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "old_value"}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "old_value"}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class2", data: %{"key" => "new_value"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class2",
+              data: %{"key" => "new_value"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              class: %{old: "class1", new: "class2"},
-              data: %{
-                "key" => %{old: "old_value", new: "new_value"}
-              }
-            }
-          }
+                   "node1" => %{
+                     class: %{old: "class1", new: "class2"},
+                     data: %{
+                       "key" => %{old: "old_value", new: "new_value"}
+                     }
+                   }
+                 }
         end
 
         test "handles empty Paradigm.Graphs" do
@@ -160,23 +260,34 @@ defmodule Paradigm.Graph.TestSuite.DiffTests do
         end
 
         test "handles nodes with nil data" do
-          graph1 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{}})
+          graph1 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{}
+            })
 
-          graph2 = new_graph()
-          |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"key" => "value"}})
+          graph2 =
+            new_graph()
+            |> Paradigm.Graph.insert_node(%Paradigm.Graph.Node{
+              id: "node1",
+              class: "class1",
+              data: %{"key" => "value"}
+            })
 
           result = Paradigm.Graph.Diff.diff(graph1, graph2)
 
           assert result.added == []
           assert result.removed == []
+
           assert result.changed == %{
-            "node1" => %{
-              data: %{
-                "key" => %{old: "MISSING VALUE", new: "value"}
-              }
-            }
-          }
+                   "node1" => %{
+                     data: %{
+                       "key" => %{old: "MISSING VALUE", new: "value"}
+                     }
+                   }
+                 }
         end
       end
     end

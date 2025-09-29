@@ -14,7 +14,9 @@ defmodule Paradigm.Graph.MapGraphTest do
     test "creates a new MapGraph with metadata" do
       opts = [name: "test_graph", description: "A test graph"]
       graph = MapGraph.new(opts)
-      assert %MapGraph{nodes: %{}, metadata: [name: "test_graph", description: "A test graph"]} = graph
+
+      assert %MapGraph{nodes: %{}, metadata: [name: "test_graph", description: "A test graph"]} =
+               graph
     end
 
     test "filters out unknown options" do

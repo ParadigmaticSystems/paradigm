@@ -23,7 +23,12 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             }
           }
 
-          node = %Paradigm.Graph.Node{id: "node1", class: "class1", data: %{"testProp" => "value"}}
+          node = %Paradigm.Graph.Node{
+            id: "node1",
+            class: "class1",
+            data: %{"testProp" => "value"}
+          }
+
           graph = build_graph(node)
 
           Paradigm.Conformance.assert_conforms(graph, paradigm)
@@ -115,6 +120,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
               "childProp" => "child_value"
             }
           }
+
           graph = build_graph(node)
 
           Paradigm.Conformance.assert_conforms(graph, paradigm)
@@ -125,6 +131,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             class: "child_class",
             data: %{"childProp" => "child_value"}
           }
+
           invalid_graph = build_graph(invalid_node)
 
           assert %Paradigm.Conformance.Result{
@@ -165,6 +172,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             class: "class1",
             data: %{"orderedProp" => ["value1", "value2", "value3"]}
           }
+
           graph = build_graph(node)
 
           Paradigm.Conformance.assert_conforms(graph, paradigm)
@@ -218,6 +226,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             class: "class1",
             data: %{"extraProp" => "value"}
           }
+
           graph = build_graph(node)
 
           assert %Paradigm.Conformance.Result{
@@ -261,6 +270,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             class: "class1",
             data: %{"enumProp" => "RED"}
           }
+
           graph1 = build_graph(node1)
 
           Paradigm.Conformance.assert_conforms(graph1, paradigm)
@@ -271,6 +281,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             class: "class1",
             data: %{"enumProp" => "PURPLE"}
           }
+
           graph2 = build_graph(node2)
 
           assert %Paradigm.Conformance.Result{
@@ -286,7 +297,6 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
                    Paradigm.Conformance.check_graph(graph2, paradigm)
         end
       end
-
     end
   end
 end

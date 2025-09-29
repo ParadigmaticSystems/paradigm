@@ -36,6 +36,4 @@ defprotocol Paradigm.Graph do
 
   @spec follow_reference(t(), node_id, any()) :: Node.t() | nil
   def follow_reference(data, node_id, reference)
-
-
 end

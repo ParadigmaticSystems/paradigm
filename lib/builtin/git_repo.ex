@@ -3,10 +3,12 @@ defmodule Paradigm.Builtin.GitRepo do
   The git repo model.
   """
   alias Paradigm.{Package, Class, Property, PrimitiveType}
+
   def definition do
     %Paradigm{
       name: "GitRepo",
-      description: "Describes git repository structure including commits, branches, and filesystem content at each revision.",
+      description:
+        "Describes git repository structure including commits, branches, and filesystem content at each revision.",
       primitive_types: %{
         "string" => %PrimitiveType{name: "String"},
         "graph" => %PrimitiveType{name: "Paradigm.Graph"}
@@ -29,7 +31,14 @@ defmodule Paradigm.Builtin.GitRepo do
         "commit" => %Class{
           name: "Commit",
           is_abstract: false,
-          owned_attributes: ["commit_hash", "commit_message", "commit_author", "commit_date", "commit_parents", "commit_filesystem"],
+          owned_attributes: [
+            "commit_hash",
+            "commit_message",
+            "commit_author",
+            "commit_date",
+            "commit_parents",
+            "commit_filesystem"
+          ],
           super_classes: []
         },
         "branch" => %Class{
