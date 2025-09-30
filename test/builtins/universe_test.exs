@@ -13,10 +13,14 @@ defmodule UniverseTest do
     end
 
     test "propagates along the identity transform" do
+      identity_transform =
+        Paradigm.ClassBasedTransform.new()
+        |> Paradigm.ClassBasedTransform.with_default(fn node -> node end)
+
       universe =
         Paradigm.Universe.bootstrap()
         |> Paradigm.Universe.register_transform_by_name(
-          Paradigm.Transform.Identity,
+          identity_transform,
           "Metamodel",
           "Metamodel"
         )

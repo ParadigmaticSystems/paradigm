@@ -11,19 +11,5 @@ defmodule BuiltinsTest do
       # Round-tripped Paradigm is equal
       assert paradigm == Paradigm.Abstraction.extract(paradigm_graph)
     end
-
-    test "identity transform is applied" do
-      paradigm = Paradigm.Builtin.Metamodel.definition()
-      graph = Paradigm.Abstraction.embed(paradigm)
-
-      {:ok, transformed_graph} =
-        Paradigm.Transform.Identity.transform(
-          graph,
-          Paradigm.Graph.MapGraph.new(graph.metadata),
-          %{}
-        )
-
-      assert graph == transformed_graph
-    end
   end
 end

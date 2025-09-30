@@ -12,7 +12,7 @@ defmodule Paradigm.Builtin.Universe do
       primitive_types: %{
         "string" => %PrimitiveType{name: "String"},
         "graph" => %PrimitiveType{name: "Paradigm.Graph"},
-        "module" => %PrimitiveType{name: "Module"},
+        "transform" => %PrimitiveType{name: "Paradigm.Transform"},
         "conformance_result" => %PrimitiveType{name: "Paradigm.Conformance.Result"}
       },
       packages: %{
@@ -40,7 +40,7 @@ defmodule Paradigm.Builtin.Universe do
           super_classes: [],
           owned_attributes: [
             "transform_name",
-            "transform_module",
+            "transform_transform",
             "source_paradigm",
             "target_paradigm"
           ]
@@ -83,9 +83,9 @@ defmodule Paradigm.Builtin.Universe do
           name: "name",
           type: "string"
         },
-        "transform_module" => %Property{
-          name: "module",
-          type: "module"
+        "transform_transform" => %Property{
+          name: "transform",
+          type: "transform"
         },
         "source_paradigm" => %Property{
           name: "source",
