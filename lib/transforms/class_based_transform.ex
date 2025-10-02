@@ -14,15 +14,15 @@ defmodule Paradigm.ClassBasedTransform do
     for_class(builder, class, fn _node -> [] end)
   end
 
+  def rename_class(%__MODULE__{} = builder, class, new_name) do
+    for_class(builder, class, fn node ->
+      %{node | class: new_name}
+    end)
+  end
+
   def copy_class(%__MODULE__{} = builder, class) do
     for_class(builder, class, fn node ->
-      [
-        %Paradigm.Graph.Node{
-          id: node.id,
-          class: node.class,
-          data: node.data
-        }
-      ]
+      node
     end)
   end
 

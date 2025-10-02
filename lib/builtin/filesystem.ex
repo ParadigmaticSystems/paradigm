@@ -41,11 +41,7 @@ defmodule Paradigm.Builtin.Filesystem do
       properties: %{
         "file_contents" => %Property{
           name: "contents",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "folder_children" => %Property{
           name: "children",

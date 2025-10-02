@@ -61,17 +61,76 @@ Or if a graph is passed, the module will attempt to extract a paradigm:
 Paradigm.Conformance.check_graph(embedded_metamodel, embedded_metamodel)
 ```
 
-### Transform
+## Transforms
 
-* **`Paradigm.Transform` Behavior** defines the contract for transform modules
-* **`Paradigm.Transform.Identity`** transform provided for demonstration
+The `Paradigm.Transform` protocol defines how transforms are handled.
 
-The transform module requires a target graph which doesn't necessarily need to be empty.
+They are invoked with `transform(transformer, source, target, opts)`.
+* transformer implements the transform protocol
+* source is a graph
+* target is a graph (not necessarily different or empty, just where new nodes will be added)
+* opts allows configuration.
+
+The simple case is handled with a helper function:
 ```elixir
-target_graph = Paradigm.Graph.MapGraph.new()
-{:ok, transformed_graph} = Paradigm.Transform.Identity.transform(embedded_metamodel, target_graph, %{})
-embedded_metamodel == transformed_graph
+  def transform(transformer, source) do
+    target = Paradigm.Graph.MapGraph.new()
+    Paradigm.Transform.transform(transformer, source, target, [])
+  end
 ```
+
+### Function transforms
+The transform protocol is implemented for `Function` in the obvious way so that anonymous functions may be used. Here's a simple injection function:
+```elixir
+fn source, target ->
+  {:ok,
+    Paradigm.Graph.stream_all_nodes(source)
+    |> Enum.reduce(target, fn node, acc_target ->
+      Paradigm.Graph.insert_node(acc_target, node)
+    end)
+  }
+end
+```
+
+### Class-based transforms
+`Paradigm.ClassBasedTransform` encapsulates a common pattern:
+1) Select all nodes of a given type
+2) For each one, produce 1 or more resulting nodes
+3) Reduce across the target graph, inserting them all
+We can get rid of a lot of repeated code with a builder pattern:
+```elixir
+import Paradigm.ClassBasedTransform
+new()
+|> with_default(fn node -> node end) # Copy all by default
+|> rename_class("class1", "class2")  # A simple rename helper
+|> for_class("strange_type",
+  fn node ->
+    %{node | data: %{}}              # Copy over with blanked data
+  end)
+|> for_class("multi_type",           # Return a list of nodes
+  fn node ->
+    [
+      %Node{id: node.id <> "_1", ...},
+      %Node{id: node.id <> "_2", ...}
+    ]
+  end)
+|> for_class("insufficient_context_type",
+  fn node, graph ->                 # Function can take 2 args
+    #Pull in additional information to build the node
+  end
+  )
+```
+Here you can see the flexibility, as the class-based transform function has access to the node and the full graph, and returns an arbitrary list of nodes.
+
+### Pipeline Transforms
+`Paradigm.PipelineTransform` allows transforms to be composed arbitrarily.
+
+```elixir
+PipelineTransform.new([transform1, transform2, transform3])
+```
+
+Note that intermediate steps automatically target a `MapGraph.new()`.
+This means memory should be considered, and "cumulative" effects need to be explicitly carried forward by each step.
 
 ## Universe Paradigm
 The `Paradigm.Builtin.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
@@ -105,7 +164,7 @@ Or install directly from GitHub:
 ```elixir
 def deps do
   [
-    {:paradigm, github: "roriholm/paradigm"}
+    {:paradigm, github: "ParadigmaticSystems/paradigm"}
   ]
 end
 ```

@@ -60,4 +60,14 @@ defmodule Paradigm do
           |> Enum.any?(fn super_id -> is_subclass_of?(super_id, target_class_id, paradigm) end)
     end
   end
+
+  def transform(transformer, source) do
+    target = Paradigm.Graph.MapGraph.new()
+    Paradigm.Transform.transform(transformer, source, target)
+  end
+
+  def transform!(transformer, source) do
+    {:ok, result} = transform(transformer, source)
+    result
+  end
 end

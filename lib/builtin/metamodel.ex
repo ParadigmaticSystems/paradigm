@@ -77,10 +77,6 @@ defmodule Paradigm.Builtin.Metamodel do
         "class_is_abstract" => %Property{
           name: "is_abstract",
           type: "boolean",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: false
         },
         "class_owned_attributes" => %Property{
@@ -104,10 +100,6 @@ defmodule Paradigm.Builtin.Metamodel do
         "enumeration_literal_name" => %Property{
           name: "name",
           type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         },
         "enumeration_literals" => %Property{
@@ -122,10 +114,6 @@ defmodule Paradigm.Builtin.Metamodel do
         "package_name" => %Property{
           name: "name",
           type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         },
         "package_nested_packages" => %Property{
@@ -149,64 +137,36 @@ defmodule Paradigm.Builtin.Metamodel do
         "package_uri" => %Property{
           name: "uri",
           type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         },
         "property_is_composite" => %Property{
           name: "is_composite",
           type: "boolean",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: false
         },
         "property_is_ordered" => %Property{
           name: "is_ordered",
           type: "boolean",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: false
         },
         "property_lower_bound" => %Property{
           name: "lower_bound",
           type: "integer",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: 1
         },
         "property_name" => %Property{
           name: "name",
           type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         },
         "property_type" => %Property{
           name: "type",
           type: "type",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         },
         "property_upper_bound" => %Property{
           name: "upper_bound",
           type: "integer",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: 1
         },
         "property_default_value" => %Property{
@@ -221,10 +181,6 @@ defmodule Paradigm.Builtin.Metamodel do
         "type_name" => %Property{
           name: "name",
           type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1,
           default_value: nil
         }
       }

@@ -58,11 +58,7 @@ defmodule Paradigm.Builtin.GitRepo do
       properties: %{
         "repo_name" => %Property{
           name: "name",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "repo_branches" => %Property{
           name: "branches",
@@ -90,35 +86,19 @@ defmodule Paradigm.Builtin.GitRepo do
         },
         "commit_hash" => %Property{
           name: "hash",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "commit_message" => %Property{
           name: "message",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "commit_author" => %Property{
           name: "author",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "commit_date" => %Property{
           name: "date",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "commit_parents" => %Property{
           name: "parents",
@@ -130,43 +110,23 @@ defmodule Paradigm.Builtin.GitRepo do
         },
         "commit_filesystem" => %Property{
           name: "filesystem",
-          type: "graph",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "graph"
         },
         "branch_name" => %Property{
           name: "name",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "branch_head" => %Property{
           name: "head",
-          type: "commit",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "commit"
         },
         "tag_name" => %Property{
           name: "name",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "string"
         },
         "tag_commit" => %Property{
           name: "commit",
-          type: "commit",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 1,
-          upper_bound: 1
+          type: "commit"
         }
       }
     }
