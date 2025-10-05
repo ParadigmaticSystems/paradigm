@@ -66,6 +66,13 @@ defmodule Paradigm.Graph.Diff do
         diff
       end
 
+    diff =
+      if old_node.owned_by != new_node.owned_by do
+        Map.put(diff, :owned_by, %{old: old_node.owned_by, new: new_node.owned_by})
+      else
+        diff
+      end
+
     old_data = old_node.data || %{}
     new_data = new_node.data || %{}
 
@@ -159,6 +166,18 @@ defmodule Paradigm.Graph.Diff do
         class_change = changes.class
         class_section = "    class: #{inspect(class_change.old)} → #{inspect(class_change.new)}"
         [class_section | parts]
+      else
+        parts
+      end
+
+    parts =
+      if Map.has_key?(changes, :owned_by) do
+        owned_by_change = changes.owned_by
+
+        owned_by_section =
+          "    owner: #{inspect(owned_by_change.old)} → #{inspect(owned_by_change.new)}"
+
+        [owned_by_section | parts]
       else
         parts
       end

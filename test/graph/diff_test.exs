@@ -60,6 +60,30 @@ defmodule Paradigm.Graph.DiffTest do
       end
     end
 
+    test "raises error for different graphs with changed node ownership" do
+      graph1 =
+        MapGraph.new()
+        |> Graph.insert_node(%Node{
+          id: "node1",
+          class: "class1",
+          owned_by: "owner1",
+          data: %{"key" => "value"}
+        })
+
+      graph2 =
+        MapGraph.new()
+        |> Graph.insert_node(%Node{
+          id: "node1",
+          class: "class1",
+          owned_by: "owner2",
+          data: %{"key" => "value"}
+        })
+
+      assert_raise RuntimeError, ~r/Graphs are not equal/, fn ->
+        Diff.assert_equal(graph1, graph2)
+      end
+    end
+
     test "error message includes detailed differences" do
       graph1 =
         MapGraph.new()
