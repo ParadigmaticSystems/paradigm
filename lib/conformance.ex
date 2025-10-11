@@ -43,7 +43,6 @@ defmodule Paradigm.Conformance do
   Asserts that a graph conforms to a paradigm.
   """
   def assert_conforms(graph, paradigm) do
-    # Check if graph is empty and raise trivial conformance error
     if Paradigm.Graph.stream_all_nodes(graph) |> Enum.empty?() do
       raise "Graph is empty"
     end
@@ -74,21 +73,30 @@ defmodule Paradigm.Conformance do
   def check_graph(graph, paradigm, cutoff \\ 50)
 
   def check_graph(graph, %Paradigm{} = paradigm, cutoff) do
-    issues =
-      Paradigm.Graph.stream_all_nodes(graph)
-      |> Stream.flat_map(&validate_node(&1, paradigm, graph))
-      |> Stream.take(cutoff)
-      |> Enum.to_list()
-      |> Kernel.++(validate_composite_ownership_exclusivity(graph, paradigm))
-
+    cache = %{}
+    {issues, _final_cache} = check_graph_with_cache(graph, paradigm, cutoff, cache)
     %Result{issues: issues}
+  end
+
+  defp check_graph_with_cache(graph, paradigm, cutoff, cache) do
+    {node_issues, cache_after_nodes} =
+      Paradigm.Graph.stream_all_nodes(graph)
+      |> Enum.reduce({[], cache}, fn node, {acc_issues, acc_cache} ->
+        {node_issues, updated_cache} = validate_node_with_cache(node, paradigm, graph, acc_cache)
+        {acc_issues ++ node_issues, updated_cache}
+      end)
+
+    limited_issues = Enum.take(node_issues, cutoff)
+    {composite_issues, final_cache} = validate_composite_ownership_exclusivity_with_cache(graph, paradigm, cache_after_nodes)
+
+    {limited_issues ++ composite_issues, final_cache}
   end
 
   def check_graph(graph, paradigm_graph, cutoff) do
     check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph), cutoff)
   end
 
-  defp validate_node(node, paradigm, graph) do
+  defp validate_node_with_cache(node, paradigm, graph, cache) do
     with {:ok, class} <- get_class_safe(paradigm, node.class) do
       abstract_class_issues =
         if class.is_abstract do
@@ -104,32 +112,31 @@ defmodule Paradigm.Conformance do
           []
         end
 
-      property_issues = validate_node_properties(node, node.id, paradigm, graph)
+      {property_issues, updated_cache} = validate_node_properties_with_cache(node, node.id, paradigm, graph, cache)
 
-      abstract_class_issues ++ property_issues
+      {abstract_class_issues ++ property_issues, updated_cache}
     else
       {:error, :invalid_class} ->
-        [
+        {[
           %Issue{
             kind: :invalid_class,
             node_id: node.id,
             property: nil,
             details: %{class: node.class}
           }
-        ]
+        ], cache}
     end
   end
 
-  defp validate_node_properties(node, node_id, paradigm, graph) do
+  defp validate_node_properties_with_cache(node, node_id, paradigm, graph, cache) do
     class = paradigm.classes[node.class]
     attributes = Paradigm.get_all_attributes(class, paradigm)
     properties = Enum.map(attributes, &paradigm.properties[&1])
 
-    [
-      validate_property_coverage(node, node_id, properties),
-      validate_property_values(node, node_id, properties, paradigm, graph)
-    ]
-    |> List.flatten()
+    coverage_issues = validate_property_coverage(node, node_id, properties)
+    {value_issues, updated_cache} = validate_property_values_with_cache(node, node_id, properties, paradigm, graph, cache)
+
+    {coverage_issues ++ value_issues, updated_cache}
   end
 
   defp validate_property_coverage(node, node_id, properties) do
@@ -164,27 +171,27 @@ defmodule Paradigm.Conformance do
     missing_issues ++ unknown_issues
   end
 
-  defp validate_property_values(node, node_id, properties, paradigm, graph) do
-    Enum.flat_map(properties, fn property ->
+  defp validate_property_values_with_cache(node, node_id, properties, paradigm, graph, cache) do
+    Enum.reduce(properties, {[], cache}, fn property, {acc_issues, acc_cache} ->
       value = Map.get(node.data, property.name)
 
-      # Only validate if the property is present
       if Map.has_key?(node.data, property.name) do
-        validate_property_value(node_id, property, value, paradigm, graph)
+        {property_issues, updated_cache} = validate_property_value_with_cache(node_id, property, value, paradigm, graph, acc_cache)
+        {acc_issues ++ property_issues, updated_cache}
       else
-        []
+        {acc_issues, acc_cache}
       end
     end)
   end
 
-  defp validate_property_value(node_id, property, value, paradigm, graph) do
-    [
-      validate_cardinality(node_id, property, value),
-      validate_references(node_id, property, value, paradigm, graph),
-      validate_enum_value(node_id, property, value, paradigm),
-      validate_composite_property(node_id, property, value, paradigm)
-    ]
-    |> List.flatten()
+  defp validate_property_value_with_cache(node_id, property, value, paradigm, graph, cache) do
+    cardinality_issues = validate_cardinality(node_id, property, value)
+    {reference_issues, updated_cache} = validate_references_with_cache(node_id, property, value, paradigm, graph, cache)
+    enum_issues = validate_enum_value(node_id, property, value, paradigm)
+    composite_issues = validate_composite_property(node_id, property, value, paradigm)
+
+    all_issues = cardinality_issues ++ reference_issues ++ enum_issues ++ composite_issues
+    {all_issues, updated_cache}
   end
 
   defp validate_cardinality(node_id, property, value) do
@@ -227,18 +234,21 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_references(node_id, property, value, paradigm, graph) do
+  defp validate_references_with_cache(node_id, property, value, paradigm, graph, cache) do
     if is_reference_property?(property, paradigm) do
-      issues_from_refs =
+      {issues_from_refs, updated_cache} =
         value
         |> extract_refs()
-        |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, graph))
+        |> Enum.reduce({[], cache}, fn ref, {acc_issues, acc_cache} ->
+          {ref_issues, ref_cache} = validate_single_reference_with_cache(node_id, property, ref, paradigm, graph, acc_cache)
+          {acc_issues ++ ref_issues, ref_cache}
+        end)
 
       issues_from_non_refs = validate_non_reference_values(node_id, property, value, paradigm)
 
-      issues_from_refs ++ issues_from_non_refs
+      {issues_from_refs ++ issues_from_non_refs, updated_cache}
     else
-      []
+      {[], cache}
     end
   end
 
@@ -259,44 +269,43 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_single_reference(
+  defp validate_single_reference_with_cache(
          node_id,
          property,
          %Ref{id: referenced_id, composite: composite_flag},
          paradigm,
-         graph
+         graph,
+         cache
        ) do
     issues = []
 
-    # Check if reference exists
-    ref_exists_issues =
-      case get_node_safe(graph, referenced_id) do
-        {:error, :node_not_found} ->
-          [
+    {ref_exists_issues, cache_after_first_lookup} =
+      case get_node_safe_with_cache(graph, referenced_id, cache) do
+        {{:error, :node_not_found}, updated_cache} ->
+          {[
             %Issue{
               kind: :references_missing_node,
               node_id: node_id,
               property: property.name,
               details: %{referenced_id: referenced_id}
             }
-          ]
+          ], updated_cache}
 
-        {:ok, referenced_node} ->
+        {{:ok, referenced_node}, updated_cache} ->
           if valid_class_reference?(referenced_node.class, property.type, paradigm) do
-            []
+            {[], updated_cache}
           else
-            [
+            {[
               %Issue{
                 kind: :references_wrong_class,
                 node_id: node_id,
                 property: property.name,
                 details: %{class: referenced_node.class}
               }
-            ]
+            ], updated_cache}
           end
       end
 
-    # Check composite flag consistency
     composite_flag_issues =
       if property.is_composite and not composite_flag do
         [
@@ -311,38 +320,36 @@ defmodule Paradigm.Conformance do
         []
       end
 
-    # Check composite ownership integrity
-    composite_ownership_issues =
+    {composite_ownership_issues, final_cache} =
       if property.is_composite do
-        case get_node_safe(graph, referenced_id) do
-          {:ok, referenced_node} ->
+        case get_node_safe_with_cache(graph, referenced_id, cache_after_first_lookup) do
+          {{:ok, referenced_node}, updated_cache} ->
             if is_nil(referenced_node.owned_by) do
-              [
+              {[
                 %Issue{
                   kind: :composite_owned_node_without_owner,
                   node_id: referenced_id,
                   property: property.name,
                   details: %{owner_node_id: node_id}
                 }
-              ]
+              ], updated_cache}
             else
-              []
+              {[], updated_cache}
             end
 
-          _ ->
-            []
+          {_, updated_cache} ->
+            {[], updated_cache}
         end
       else
-        []
+        {[], cache_after_first_lookup}
       end
 
-    issues ++ ref_exists_issues ++ composite_flag_issues ++ composite_ownership_issues
+    all_issues = issues ++ ref_exists_issues ++ composite_flag_issues ++ composite_ownership_issues
+    {all_issues, final_cache}
   end
 
-  defp validate_single_reference(_node_id, _property, %ExternalRef{}, _paradigm, _graph) do
-    # External references are always valid - they point outside the model
-    # We assume they are resolved elsewhere or are inherently valid
-    []
+  defp validate_single_reference_with_cache(_node_id, _property, %ExternalRef{}, _paradigm, _graph, cache) do
+    {[], cache}
   end
 
   defp validate_enum_value(node_id, property, value, paradigm) do
@@ -381,8 +388,7 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_composite_ownership_exclusivity(graph, paradigm) do
-    # Build a map of referenced node IDs to their composite owners
+  defp validate_composite_ownership_exclusivity_with_cache(graph, paradigm, cache) do
     composite_owners =
       Paradigm.Graph.stream_all_nodes(graph)
       |> Enum.reduce(%{}, fn node, acc ->
@@ -391,11 +397,9 @@ defmodule Paradigm.Conformance do
         end)
       end)
 
-    # Find nodes with multiple composite owners
-    composite_owners
+    issues = composite_owners
     |> Enum.filter(fn {_referenced_id, owners} -> length(owners) > 1 end)
     |> Enum.flat_map(fn {referenced_id, owners} ->
-      # Create issues for all owners except the first one
       [_first_owner | other_owners] = owners
 
       Enum.map(other_owners, fn {owner_node_id, property_name, first_owner_id} ->
@@ -407,6 +411,8 @@ defmodule Paradigm.Conformance do
         }
       end)
     end)
+
+    {issues, cache}
   end
 
   defp collect_composite_references(owner_node_id, property_name, value, paradigm, acc) do
@@ -430,11 +436,27 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  # Helper functions
   defp get_node_safe(graph, node_id) do
     case Paradigm.Graph.get_node(graph, node_id) do
       nil -> {:error, :node_not_found}
       node -> {:ok, node}
+    end
+  end
+
+  defp get_node_safe_with_cache(graph, node_id, cache) do
+    case Map.get(cache, node_id) do
+      nil ->
+        result = case Paradigm.Graph.get_node(graph, node_id) do
+          nil -> {:error, :node_not_found}
+          node -> {:ok, node}
+        end
+        case result do
+          {:ok, _node} -> {result, Map.put(cache, node_id, result)}
+          {:error, _} -> {result, cache}
+        end
+
+      cached_result ->
+        {cached_result, cache}
     end
   end
 
