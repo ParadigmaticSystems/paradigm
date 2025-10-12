@@ -61,6 +61,20 @@ defmodule Paradigm do
     end
   end
 
+  def nodes_of_type(graph, type) do
+    Paradigm.Graph.get_all_nodes_of_class(graph, type)
+    |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
+    |> Map.new()
+  end
+
+  def indexed_by_ref(node_map, attr) do
+    node_map    |> Enum.group_by(fn {_id, node} ->
+      node.data[attr].id
+    end, fn {_id, node} ->
+      node
+    end)
+  end
+
   def transform(transformer, source) do
     target = Paradigm.Graph.MapGraph.new()
     Paradigm.Transform.transform(transformer, source, target)

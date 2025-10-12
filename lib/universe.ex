@@ -71,31 +71,38 @@ defmodule Paradigm.Universe do
   end
 
   def bootstrap(name \\ "universe_model", description \\ "Test universe") do
+    Paradigm.Graph.MapGraph.new(name: name, description: description)
+    |> add_metamodel()
+  end
+
+  def add_metamodel(universe) do
     metamodel = Paradigm.Builtin.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
-
-    Paradigm.Graph.MapGraph.new(name: name, description: description)
+    universe
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
     |> apply_propagate()
   end
 
-  def get_paradigm_for(universe, node_id) do
+  def get_instantiation_node_for(universe, node_id) do
     instantiations = Graph.get_all_nodes_of_class(universe, "instantiation")
 
-    registered_paradigm_graph =
-      Enum.find_value(instantiations, fn inst_node_id ->
-        inst_node = Graph.get_node(universe, inst_node_id)
+    Enum.find_value(instantiations, fn inst_node_id ->
+      inst_node = Graph.get_node(universe, inst_node_id)
 
-        if inst_node.data["instance"].id == node_id do
-          Graph.get_node(universe, inst_node.data["paradigm"].id)
-        end
-      end)
+      if inst_node.data["instance"].id == node_id do
+        inst_node
+      end
+    end)
+  end
 
-    if registered_paradigm_graph do
-      Paradigm.Abstraction.extract(registered_paradigm_graph.data["graph"])
-    else
-      false
+  def get_paradigm_for(universe, node_id) do
+    instantiation_node = get_instantiation_node_for(universe, node_id)
+
+    if instantiation_node do
+      paradigm_id = instantiation_node.data["paradigm"].id
+      paradigm_graph = Graph.get_node(universe, paradigm_id).data["graph"]
+      Paradigm.Abstraction.extract(paradigm_graph)
     end
   end
 
