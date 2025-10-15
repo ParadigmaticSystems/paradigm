@@ -2,6 +2,17 @@ defmodule UniverseTest do
   use ExUnit.Case
 
   describe "universe paradigm" do
+    test "metamodel conformance" do
+      universe_graph =
+        Paradigm.Builtin.Universe.definition()
+        |> Paradigm.Abstraction.embed()
+
+      Paradigm.Conformance.assert_conforms(
+        universe_graph,
+        Paradigm.Builtin.Metamodel.definition()
+      )
+    end
+
     test "bootstrap contains self-realizing metamodel" do
       universe = Paradigm.Universe.bootstrap()
       # The bootstrap has performed the conformance test

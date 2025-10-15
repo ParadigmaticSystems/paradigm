@@ -7,7 +7,7 @@ defmodule Paradigm.Class do
         }
   defstruct [
     :name,
-    :is_abstract,
+    is_abstract: false,
     owned_attributes: [],
     super_classes: []
   ]

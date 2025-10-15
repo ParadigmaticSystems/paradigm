@@ -11,8 +11,8 @@ defmodule Paradigm.Builtin.Universe do
         "A meta-paradigm in which graphs are primitive types, and we model the abstraction and transform relationships between them.",
       primitive_types: %{
         "string" => %PrimitiveType{name: "String"},
-        "graph" => %PrimitiveType{name: "Paradigm.Graph"},
-        "transform" => %PrimitiveType{name: "Paradigm.Transform"},
+        "paradigm_graph" => %PrimitiveType{name: "Paradigm.Graph"},
+        "paradigm_transform" => %PrimitiveType{name: "Paradigm.Transform"},
         "conformance_result" => %PrimitiveType{name: "Paradigm.Conformance.Result"}
       },
       packages: %{
@@ -48,7 +48,7 @@ defmodule Paradigm.Builtin.Universe do
         "transform_instance" => %Class{
           name: "TransformInstance",
           owned_attributes: [
-            "transform",
+            "used_transform",
             "transform_source",
             "transform_target",
             "transform_errors",
@@ -59,7 +59,7 @@ defmodule Paradigm.Builtin.Universe do
       properties: %{
         "graph" => %Property{
           name: "graph",
-          type: "graph"
+          type: "paradigm_graph"
         },
         "graph_name" => %Property{
           name: "name",
@@ -85,7 +85,7 @@ defmodule Paradigm.Builtin.Universe do
         },
         "transform_transform" => %Property{
           name: "transform",
-          type: "transform"
+          type: "paradigm_transform"
         },
         "source_paradigm" => %Property{
           name: "source",
@@ -95,7 +95,7 @@ defmodule Paradigm.Builtin.Universe do
           name: "target",
           type: "registered_graph"
         },
-        "transform" => %Property{
+        "used_transform" => %Property{
           name: "transform",
           type: "transform"
         },

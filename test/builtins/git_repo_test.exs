@@ -204,6 +204,17 @@ defmodule GitRepoTest do
       refute File.exists?(Path.join(repo_path, "main-only.txt"))
     end
 
+    test "metamodel conformance" do
+      repo_graph =
+        Paradigm.Builtin.GitRepo.definition()
+        |> Paradigm.Abstraction.embed()
+
+      Paradigm.Conformance.assert_conforms(
+        repo_graph,
+        Paradigm.Builtin.Metamodel.definition()
+      )
+    end
+
     test "production of git repo graph", %{repo_path: repo_path} do
       graph = GitRepoGraph.new(root: repo_path)
       Paradigm.Conformance.assert_conforms(graph, Paradigm.Builtin.GitRepo.definition())
