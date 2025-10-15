@@ -79,6 +79,7 @@ defmodule Paradigm.Universe do
     metamodel = Paradigm.Builtin.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
     metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
+
     universe
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
     |> apply_propagate()

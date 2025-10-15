@@ -68,11 +68,15 @@ defmodule Paradigm do
   end
 
   def indexed_by_ref(node_map, attr) do
-    node_map    |> Enum.group_by(fn {_id, node} ->
-      node.data[attr].id
-    end, fn {_id, node} ->
-      node
-    end)
+    node_map
+    |> Enum.group_by(
+      fn {_id, node} ->
+        node.data[attr].id
+      end,
+      fn {_id, node} ->
+        node
+      end
+    )
   end
 
   def transform(transformer, source) do

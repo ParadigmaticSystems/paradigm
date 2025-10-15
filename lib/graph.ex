@@ -7,6 +7,15 @@ defprotocol Paradigm.Graph do
   @type node_id :: Paradigm.id()
   @type class_id :: Paradigm.id()
 
+  @spec get_name(t()) :: String.t() | nil
+  def get_name(data)
+
+  @spec get_description(t()) :: String.t() | nil
+  def get_description(data)
+
+  @spec get_content_hash(t()) :: String.t() | nil
+  def get_content_hash(data)
+
   @spec get_all_nodes(t()) :: [node_id]
   def get_all_nodes(data)
 

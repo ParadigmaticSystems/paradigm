@@ -213,8 +213,8 @@ defmodule Paradigm.Abstraction do
       |> Map.new()
 
     %Paradigm{
-      name: graph.metadata[:name],
-      description: graph.metadata[:description],
+      name: Paradigm.Graph.get_name(graph),
+      description: Paradigm.Graph.get_description(graph),
       primitive_types: primitive_types,
       packages: packages,
       classes: classes,

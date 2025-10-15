@@ -13,6 +13,22 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   alias Paradigm.Graph.Node
 
   @impl true
+  def get_name(%{metadata: metadata}) do
+    Keyword.get(metadata, :name)
+  end
+
+  @impl true
+  def get_description(%{metadata: metadata}) do
+    Keyword.get(metadata, :description)
+  end
+
+  @impl true
+  def get_content_hash(%{nodes: graph}) do
+    Base.encode16(:crypto.hash(:sha256, :erlang.term_to_binary(graph)))
+    |> String.slice(-5..-1)
+  end
+
+  @impl true
   def get_all_nodes(%{nodes: graph}) do
     Map.keys(graph)
   end

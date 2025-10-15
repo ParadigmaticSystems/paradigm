@@ -32,6 +32,45 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   alias Paradigm.Graph.Node
 
   @impl true
+  def get_name(%{metadata: metadata}) do
+    Keyword.get(metadata, :name)
+  end
+
+  @impl true
+  def get_description(%{metadata: metadata}) do
+    Keyword.get(metadata, :description)
+  end
+
+  @impl true
+  def get_content_hash(%{root: root_path}) do
+    case run_git_cmd(["rev-parse", "HEAD"], root_path) do
+      {output, 0} ->
+        # Use the current HEAD commit hash as the primary content identifier
+        head_hash = String.trim(output)
+
+        # Also include branch and tag state for a more complete hash
+        branches_hash = get_all_branches(root_path) |> Enum.sort() |> :erlang.term_to_binary()
+        tags_hash = get_all_tags(root_path) |> Enum.sort() |> :erlang.term_to_binary()
+
+        combined = head_hash <> Base.encode16(:crypto.hash(:sha256, branches_hash <> tags_hash))
+
+        Base.encode16(:crypto.hash(:sha256, combined))
+        |> String.slice(-8..-1)
+
+      _ ->
+        # Fallback for non-git repos or repos without commits
+        repo_state = %{
+          branches: get_all_branches(root_path),
+          tags: get_all_tags(root_path),
+          path: root_path
+        }
+
+        Base.encode16(:crypto.hash(:sha256, :erlang.term_to_binary(repo_state)))
+        |> String.slice(-8..-1)
+    end
+  end
+
+  @impl true
   def get_all_nodes(%{root: root_path}) do
     case is_git_repo?(root_path) do
       true -> collect_all_git_nodes(root_path)

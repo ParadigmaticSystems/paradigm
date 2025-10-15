@@ -27,6 +27,39 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   alias Paradigm.Graph.Node
 
   @impl true
+  def get_name(%{metadata: metadata}) do
+    Keyword.get(metadata, :name)
+  end
+
+  @impl true
+  def get_description(%{metadata: metadata}) do
+    Keyword.get(metadata, :description)
+  end
+
+  @impl true
+  def get_content_hash(%{root: root_path} = fs_graph) do
+    all_nodes = get_all_nodes(fs_graph)
+
+    # Create a sorted list of file paths with their modification times and sizes
+    file_info =
+      Enum.map(all_nodes, fn node_id ->
+        full_path = resolve_path(root_path, node_id)
+
+        case File.stat(full_path) do
+          {:ok, %File.Stat{mtime: mtime, size: size, type: type}} ->
+            {node_id, mtime, size, type}
+
+          {:error, _} ->
+            {node_id, nil, 0, :unknown}
+        end
+      end)
+      |> Enum.sort()
+
+    Base.encode16(:crypto.hash(:sha256, :erlang.term_to_binary(file_info)))
+    |> String.slice(-8..-1)
+  end
+
+  @impl true
   def get_all_nodes(%{root: root_path}) do
     case File.exists?(root_path) do
       true -> collect_all_paths(root_path)
