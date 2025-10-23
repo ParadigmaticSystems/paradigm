@@ -63,20 +63,81 @@ defmodule Paradigm do
 
   def nodes_of_type(graph, type) do
     Paradigm.Graph.get_all_nodes_of_class(graph, type)
-    |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
-    |> Map.new()
+    |> Enum.map(fn id -> Paradigm.Graph.get_node(graph, id) end)
   end
 
-  def indexed_by_ref(node_map, attr) do
-    node_map
-    |> Enum.group_by(
-      fn {_id, node} ->
-        node.data[attr].id
-      end,
-      fn {_id, node} ->
-        node
+  @doc """
+  Indexes 1-to-many associations.
+  (Each Graph instance has a unique paradigm)
+  """
+  def parent_lookup_table(nodes, attr) do
+    nodes
+    |> Enum.map(fn node ->
+      {node.data[attr].id, node}
+    end)
+    |> Enum.reduce(%{}, fn {k, v}, acc ->
+      case Map.has_key?(acc, k) do
+        true -> raise "Failed to make lookup table. Duplicate key: #{inspect(k)}"
+        false -> Map.put(acc, k, v)
       end
-    )
+    end)
+  end
+
+
+  def parent_node_lookup_table(graph, association_type, parent_key, child_key) do
+    associations = nodes_of_type(graph, association_type)
+    |> Enum.reduce(%{}, fn ass_node, acc ->
+
+    end)
+  end
+
+
+  def child_node_lookup_table(graph, association_type, parent_key, child_key) do
+    associations = nodes_of_type(graph, association_type)
+    |> Enum.reduce(%{}, fn ass_node, acc ->
+      with parent_data when not is_nil(parent_data) <- ass_node.data[parent_key],
+           child_data when not is_nil(child_data) <- ass_node.data[child_key] do
+        parent_id = parent_data.id
+        child_id = child_data.id
+        child_node = Paradigm.Graph.get_node(graph, child_id)
+        Map.update(acc, parent_id, [child_node], fn existing -> existing ++ [child_node] end)
+      else
+        _ -> acc
+      end
+    end)
+  end
+
+  @doc """
+  Turns association nodes into tuples with dereferenced nodes sorted by dependence
+  """
+  def topological_join(graph, association_type, parent_ref, child_ref) do
+    digraph = :digraph.new()
+    associations = nodes_of_type(graph, association_type)
+    lookup_by_instance = parent_lookup_table(associations, "instance")
+
+    associations
+    |> Enum.each(fn ass_node ->
+      parent_id = ass_node.data[parent_ref].id
+      child_id = ass_node.data[child_ref].id
+
+      :digraph.add_vertex(digraph, parent_id)
+      :digraph.add_vertex(digraph, child_id)
+      :digraph.add_edge(digraph, child_id, parent_id)
+    end)
+
+    sorted_ids =
+      :digraph_utils.topsort(digraph)
+      |> Enum.reverse()
+
+    :digraph.delete(digraph)
+
+    sorted_ids
+    |> Enum.map(fn id ->
+      ass_node = lookup_by_instance[id]
+
+      {ass_node, Paradigm.Graph.get_node(graph, ass_node.data[child_ref].id),
+       Paradigm.Graph.get_node(graph, ass_node.data[parent_ref].id)}
+    end)
   end
 
   def transform(transformer, source) do
