@@ -74,9 +74,18 @@ defmodule Paradigm.Conformance do
   def check_graph(graph, paradigm, cutoff \\ 50)
 
   def check_graph(graph, %Paradigm{} = paradigm, cutoff) do
+    # First pass: build a lightweight node index (just id -> {class, owned_by})
+    node_index =
+      Paradigm.Graph.stream_all_nodes(graph)
+      |> Stream.map(fn node ->
+        {node.id, %{class: node.class, owned_by: node.owned_by}}
+      end)
+      |> Enum.into(%{})
+
+    # Second pass: stream validation with the index
     issues =
       Paradigm.Graph.stream_all_nodes(graph)
-      |> Stream.flat_map(&validate_node(&1, paradigm, graph))
+      |> Stream.flat_map(&validate_node(&1, paradigm, node_index))
       |> Stream.take(cutoff)
       |> Enum.to_list()
       |> Kernel.++(validate_composite_ownership_exclusivity(graph, paradigm))
@@ -88,7 +97,7 @@ defmodule Paradigm.Conformance do
     check_graph(graph, Paradigm.Abstraction.extract(paradigm_graph), cutoff)
   end
 
-  defp validate_node(node, paradigm, graph) do
+  defp validate_node(node, paradigm, node_index) do
     with {:ok, class} <- get_class_safe(paradigm, node.class) do
       abstract_class_issues =
         if class.is_abstract do
@@ -104,7 +113,7 @@ defmodule Paradigm.Conformance do
           []
         end
 
-      property_issues = validate_node_properties(node, node.id, paradigm, graph)
+      property_issues = validate_node_properties(node, node.id, paradigm, node_index)
 
       abstract_class_issues ++ property_issues
     else
@@ -120,14 +129,14 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_node_properties(node, node_id, paradigm, graph) do
+  defp validate_node_properties(node, node_id, paradigm, node_index) do
     class = paradigm.classes[node.class]
     attributes = Paradigm.get_all_attributes(class, paradigm)
     properties = Enum.map(attributes, &paradigm.properties[&1])
 
     [
       validate_property_coverage(node, node_id, properties),
-      validate_property_values(node, node_id, properties, paradigm, graph)
+      validate_property_values(node, node_id, properties, paradigm, node_index)
     ]
     |> List.flatten()
   end
@@ -164,23 +173,23 @@ defmodule Paradigm.Conformance do
     missing_issues ++ unknown_issues
   end
 
-  defp validate_property_values(node, node_id, properties, paradigm, graph) do
+  defp validate_property_values(node, node_id, properties, paradigm, node_index) do
     Enum.flat_map(properties, fn property ->
       value = Map.get(node.data, property.name)
 
       # Only validate if the property is present
       if Map.has_key?(node.data, property.name) do
-        validate_property_value(node_id, property, value, paradigm, graph)
+        validate_property_value(node_id, property, value, paradigm, node_index)
       else
         []
       end
     end)
   end
 
-  defp validate_property_value(node_id, property, value, paradigm, graph) do
+  defp validate_property_value(node_id, property, value, paradigm, node_index) do
     [
       validate_cardinality(node_id, property, value),
-      validate_references(node_id, property, value, paradigm, graph),
+      validate_references(node_id, property, value, paradigm, node_index),
       validate_enum_value(node_id, property, value, paradigm),
       validate_composite_property(node_id, property, value, paradigm)
     ]
@@ -227,12 +236,12 @@ defmodule Paradigm.Conformance do
     end
   end
 
-  defp validate_references(node_id, property, value, paradigm, graph) do
+  defp validate_references(node_id, property, value, paradigm, node_index) do
     if is_reference_property?(property, paradigm) do
       issues_from_refs =
         value
         |> extract_refs()
-        |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, graph))
+        |> Enum.flat_map(&validate_single_reference(node_id, property, &1, paradigm, node_index))
 
       issues_from_non_refs = validate_non_reference_values(node_id, property, value, paradigm)
 
@@ -264,14 +273,14 @@ defmodule Paradigm.Conformance do
          property,
          %Ref{id: referenced_id, composite: composite_flag},
          paradigm,
-         graph
+         node_index
        ) do
     issues = []
 
     # Check if reference exists
     ref_exists_issues =
-      case get_node_safe(graph, referenced_id) do
-        {:error, :node_not_found} ->
+      case Map.get(node_index, referenced_id) do
+        nil ->
           [
             %Issue{
               kind: :references_missing_node,
@@ -281,8 +290,8 @@ defmodule Paradigm.Conformance do
             }
           ]
 
-        {:ok, referenced_node} ->
-          if valid_class_reference?(referenced_node.class, property.type, paradigm) do
+        %{class: referenced_class} ->
+          if valid_class_reference?(referenced_class, property.type, paradigm) do
             []
           else
             [
@@ -290,7 +299,7 @@ defmodule Paradigm.Conformance do
                 kind: :references_wrong_class,
                 node_id: node_id,
                 property: property.name,
-                details: %{class: referenced_node.class}
+                details: %{class: referenced_class}
               }
             ]
           end
@@ -314,22 +323,21 @@ defmodule Paradigm.Conformance do
     # Check composite ownership integrity
     composite_ownership_issues =
       if property.is_composite do
-        case get_node_safe(graph, referenced_id) do
-          {:ok, referenced_node} ->
-            if is_nil(referenced_node.owned_by) do
-              [
-                %Issue{
-                  kind: :composite_owned_node_without_owner,
-                  node_id: referenced_id,
-                  property: property.name,
-                  details: %{owner_node_id: node_id}
-                }
-              ]
-            else
-              []
-            end
+        case Map.get(node_index, referenced_id) do
+          %{owned_by: nil} ->
+            [
+              %Issue{
+                kind: :composite_owned_node_without_owner,
+                node_id: referenced_id,
+                property: property.name,
+                details: %{owner_node_id: node_id}
+              }
+            ]
 
-          _ ->
+          %{owned_by: _} ->
+            []
+
+          nil ->
             []
         end
       else
@@ -339,7 +347,7 @@ defmodule Paradigm.Conformance do
     issues ++ ref_exists_issues ++ composite_flag_issues ++ composite_ownership_issues
   end
 
-  defp validate_single_reference(_node_id, _property, %ExternalRef{}, _paradigm, _graph) do
+  defp validate_single_reference(_node_id, _property, %ExternalRef{}, _paradigm, _node_index) do
     # External references are always valid - they point outside the model
     # We assume they are resolved elsewhere or are inherently valid
     []
@@ -431,13 +439,6 @@ defmodule Paradigm.Conformance do
   end
 
   # Helper functions
-  defp get_node_safe(graph, node_id) do
-    case Paradigm.Graph.get_node(graph, node_id) do
-      nil -> {:error, :node_not_found}
-      node -> {:ok, node}
-    end
-  end
-
   defp get_class_safe(paradigm, class_name) do
     case Map.fetch(paradigm.classes, class_name) do
       {:ok, class} -> {:ok, class}
