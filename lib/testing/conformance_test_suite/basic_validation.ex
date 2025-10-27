@@ -10,15 +10,14 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "class1" => %Paradigm.Class{
                 name: "TestClass",
-                owned_attributes: ["prop1"]
-              }
-            },
-            properties: %{
-              "prop1" => %Paradigm.Property{
-                name: "testProp",
-                lower_bound: 1,
-                upper_bound: 1,
-                type: "string"
+                properties: %{
+                  "testProp" => %Paradigm.Property{
+                    name: "testProp",
+                    lower_bound: 1,
+                    upper_bound: 1,
+                    type: "string"
+                  }
+                }
               }
             }
           }
@@ -61,7 +60,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
               "class1" => %Paradigm.Class{
                 name: "TestClass",
                 is_abstract: true,
-                owned_attributes: []
+                properties: %{}
               }
             }
           }
@@ -88,26 +87,26 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "parent_class" => %Paradigm.Class{
                 name: "ParentClass",
-                owned_attributes: ["parent_prop"]
+                properties: %{
+                  "parentProp" => %Paradigm.Property{
+                    name: "parentProp",
+                    lower_bound: 1,
+                    upper_bound: 1,
+                    type: "string"
+                  }
+                }
               },
               "child_class" => %Paradigm.Class{
                 name: "ChildClass",
-                owned_attributes: ["child_prop"],
+                properties: %{
+                  "childProp" => %Paradigm.Property{
+                    name: "childProp",
+                    lower_bound: 1,
+                    upper_bound: 1,
+                    type: "string"
+                  }
+                },
                 super_classes: ["parent_class"]
-              }
-            },
-            properties: %{
-              "parent_prop" => %Paradigm.Property{
-                name: "parentProp",
-                lower_bound: 1,
-                upper_bound: 1,
-                type: "string"
-              },
-              "child_prop" => %Paradigm.Property{
-                name: "childProp",
-                lower_bound: 1,
-                upper_bound: 1,
-                type: "string"
               }
             }
           }
@@ -153,16 +152,15 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "class1" => %Paradigm.Class{
                 name: "TestClass",
-                owned_attributes: ["ordered_prop"]
-              }
-            },
-            properties: %{
-              "ordered_prop" => %Paradigm.Property{
-                name: "orderedProp",
-                is_ordered: true,
-                lower_bound: 1,
-                upper_bound: :infinity,
-                type: "string"
+                properties: %{
+                  "orderedProp" => %Paradigm.Property{
+                    name: "orderedProp",
+                    is_ordered: true,
+                    lower_bound: 1,
+                    upper_bound: :infinity,
+                    type: "string"
+                  }
+                }
               }
             }
           }
@@ -184,13 +182,12 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "class1" => %Paradigm.Class{
                 name: "TestClass",
-                owned_attributes: ["prop1"]
-              }
-            },
-            properties: %{
-              "prop1" => %Paradigm.Property{
-                name: "testProp",
-                type: "string"
+                properties: %{
+                  "testProp" => %Paradigm.Property{
+                    name: "testProp",
+                    type: "string"
+                  }
+                }
               }
             }
           }
@@ -216,7 +213,7 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "class1" => %Paradigm.Class{
                 name: "TestClass",
-                owned_attributes: []
+                properties: %{}
               }
             }
           }
@@ -247,13 +244,12 @@ defmodule Paradigm.Conformance.TestSuite.BasicValidation do
             classes: %{
               "class1" => %Paradigm.Class{
                 name: "TestClass",
-                owned_attributes: ["enum_prop"]
-              }
-            },
-            properties: %{
-              "enum_prop" => %Paradigm.Property{
-                name: "enumProp",
-                type: "color_enum"
+                properties: %{
+                  "enumProp" => %Paradigm.Property{
+                    name: "enumProp",
+                    type: "color_enum"
+                  }
+                }
               }
             },
             enumerations: %{

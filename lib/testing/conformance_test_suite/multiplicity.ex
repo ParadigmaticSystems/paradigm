@@ -7,15 +7,14 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
           classes: %{
             "class1" => %Paradigm.Class{
               name: "TestClass",
-              owned_attributes: ["prop1"]
-            }
-          },
-          properties: %{
-            "prop1" => %Paradigm.Property{
-              name: "testProp",
-              lower_bound: 2,
-              upper_bound: 3,
-              type: "string"
+              properties: %{
+                "testProp" => %Paradigm.Property{
+                  name: "testProp",
+                  lower_bound: 2,
+                  upper_bound: 3,
+                  type: "string"
+                }
+              }
             }
           }
         }
@@ -69,27 +68,26 @@ defmodule Paradigm.Conformance.TestSuite.Multiplicity do
           classes: %{
             "class1" => %Paradigm.Class{
               name: "TestClass",
-              owned_attributes: ["prop1", "prop2", "prop3"]
-            }
-          },
-          properties: %{
-            "prop1" => %Paradigm.Property{
-              name: "zeroProp",
-              lower_bound: 0,
-              upper_bound: 0,
-              type: "string"
-            },
-            "prop2" => %Paradigm.Property{
-              name: "optionalProp",
-              lower_bound: 0,
-              upper_bound: 1,
-              type: "string"
-            },
-            "prop3" => %Paradigm.Property{
-              name: "infiniteProp",
-              lower_bound: 1,
-              upper_bound: :infinity,
-              type: "string"
+              properties: %{
+                "zeroProp" => %Paradigm.Property{
+                  name: "zeroProp",
+                  lower_bound: 0,
+                  upper_bound: 0,
+                  type: "string"
+                },
+                "optionalProp" => %Paradigm.Property{
+                  name: "optionalProp",
+                  lower_bound: 0,
+                  upper_bound: 1,
+                  type: "string"
+                },
+                "infiniteProp" => %Paradigm.Property{
+                  name: "infiniteProp",
+                  lower_bound: 1,
+                  upper_bound: :infinity,
+                  type: "string"
+                }
+              }
             }
           }
         }

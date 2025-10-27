@@ -3,7 +3,7 @@ defmodule Paradigm do
   The top-level `Paradigm` data model object.
   """
 
-  alias Paradigm.{PrimitiveType, Package, Class, Property, Enumeration}
+  alias Paradigm.{PrimitiveType, Package, Class, Enumeration}
 
   @type id :: String.t()
   @type name :: String.t()
@@ -14,7 +14,6 @@ defmodule Paradigm do
           primitive_types: %{id() => PrimitiveType.t()},
           packages: %{id() => Package.t()},
           classes: %{id() => Class.t()},
-          properties: %{id() => Property.t()},
           enumerations: %{id() => Enumeration.t()}
         }
 
@@ -23,27 +22,72 @@ defmodule Paradigm do
             primitive_types: %{},
             packages: %{},
             classes: %{},
-            properties: %{},
             enumerations: %{}
 
-  def get_all_attributes(class, paradigm) do
+  def get_all_properties(class, paradigm) do
+    case class do
+      nil ->
+        %{}
+
+      %__MODULE__.Class{} = class ->
+        direct = class.properties || %{}
+
+        inherited =
+          (class.super_classes || [])
+          |> Enum.reduce(%{}, fn super_id, acc ->
+            case paradigm.classes[super_id] do
+              nil -> acc
+              super_class -> Map.merge(acc, get_all_properties(super_class, paradigm))
+            end
+          end)
+
+        Map.merge(inherited, direct)
+    end
+  end
+
+  def get_all_properties_sorted(class, paradigm) do
     case class do
       nil ->
         []
 
       %__MODULE__.Class{} = class ->
-        direct = class.owned_attributes || []
-
+        # Get inherited properties first, sorted by position
         inherited =
           (class.super_classes || [])
           |> Enum.flat_map(fn super_id ->
             case paradigm.classes[super_id] do
               nil -> []
-              super_class -> get_all_attributes(super_class, paradigm)
+              super_class -> get_all_properties_sorted(super_class, paradigm)
             end
           end)
+          |> Enum.sort_by(& &1.position)
 
-        direct ++ inherited
+        # Get direct properties, sorted by position
+        direct = get_class_properties_sorted(class)
+
+        # Combine inherited and direct properties, removing duplicates (direct overrides inherited)
+        direct_names = MapSet.new(direct, & &1.name)
+
+        # Keep inherited properties that aren't overridden, plus all direct properties
+        filtered_inherited =
+          Enum.filter(inherited, fn prop ->
+            not MapSet.member?(direct_names, prop.name)
+          end)
+
+        (filtered_inherited ++ direct)
+        |> Enum.sort_by(& &1.position)
+    end
+  end
+
+  def get_class_properties_sorted(class) do
+    case class do
+      nil ->
+        []
+
+      %__MODULE__.Class{} = class ->
+        (class.properties || %{})
+        |> Map.values()
+        |> Enum.sort_by(& &1.position)
     end
   end
 
@@ -83,28 +127,35 @@ defmodule Paradigm do
     end)
   end
 
-
   def parent_node_lookup_table(graph, association_type, parent_key, child_key) do
-    associations = nodes_of_type(graph, association_type)
-    |> Enum.reduce(%{}, fn ass_node, acc ->
-
-    end)
-  end
-
-
-  def child_node_lookup_table(graph, association_type, parent_key, child_key) do
-    associations = nodes_of_type(graph, association_type)
+    nodes_of_type(graph, association_type)
     |> Enum.reduce(%{}, fn ass_node, acc ->
       with parent_data when not is_nil(parent_data) <- ass_node.data[parent_key],
            child_data when not is_nil(child_data) <- ass_node.data[child_key] do
         parent_id = parent_data.id
         child_id = child_data.id
-        child_node = Paradigm.Graph.get_node(graph, child_id)
-        Map.update(acc, parent_id, [child_node], fn existing -> existing ++ [child_node] end)
+        parent_node = Paradigm.Graph.get_node(graph, parent_id)
+        Map.put(acc, child_id, parent_node)
       else
         _ -> acc
       end
     end)
+  end
+
+  def child_node_lookup_table(graph, association_type, parent_key, child_key) do
+    _associations =
+      nodes_of_type(graph, association_type)
+      |> Enum.reduce(%{}, fn ass_node, acc ->
+        with parent_data when not is_nil(parent_data) <- ass_node.data[parent_key],
+             child_data when not is_nil(child_data) <- ass_node.data[child_key] do
+          parent_id = parent_data.id
+          child_id = child_data.id
+          child_node = Paradigm.Graph.get_node(graph, child_id)
+          Map.update(acc, parent_id, [child_node], fn existing -> existing ++ [child_node] end)
+        else
+          _ -> acc
+        end
+      end)
   end
 
   @doc """

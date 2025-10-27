@@ -19,106 +19,97 @@ defmodule Paradigm.Builtin.Universe do
         "universe" => %Package{
           name: "Universe",
           uri: "universe",
-          owned_types: ["registered_graph", "instantiation", "transform", "transform_instance"]
+          owned_types: ["registered_graph", "transform", "transform_instance"]
         }
       },
       classes: %{
         "registered_graph" => %Class{
           name: "RegisteredGraph",
-          owned_attributes: ["graph_name", "graph"]
-        },
-        "instantiation" => %Class{
-          name: "Instantiation",
-          owned_attributes: [
-            "instantiation_paradigm",
-            "instantiation_instance",
-            "instantiation_conformance_result"
-          ]
+          properties: %{
+            "name" => %Property{
+              name: "name",
+              type: "string",
+              position: 0
+            },
+            "graph" => %Property{
+              name: "graph",
+              type: "paradigm_graph",
+              position: 1
+            },
+            "paradigm" => %Property{
+              name: "paradigm",
+              type: "registered_graph",
+              position: 2
+            },
+            "conformance_result" => %Property{
+              name: "conformance_result",
+              type: "conformance_result",
+              lower_bound: 0,
+              upper_bound: 1,
+              position: 3
+            }
+          }
         },
         "transform" => %Class{
           name: "Transform",
           super_classes: [],
-          owned_attributes: [
-            "transform_name",
-            "transform_transform",
-            "source_paradigm",
-            "target_paradigm"
-          ]
+          properties: %{
+            "name" => %Property{
+              name: "name",
+              type: "string",
+              position: 0
+            },
+            "transform" => %Property{
+              name: "transform",
+              type: "paradigm_transform",
+              position: 1
+            },
+            "source" => %Property{
+              name: "source",
+              type: "registered_graph",
+              position: 2
+            },
+            "target" => %Property{
+              name: "target",
+              type: "registered_graph",
+              position: 3
+            }
+          }
         },
         "transform_instance" => %Class{
           name: "TransformInstance",
-          owned_attributes: [
-            "used_transform",
-            "transform_source",
-            "transform_target",
-            "transform_errors",
-            "transform_warnings"
-          ]
-        }
-      },
-      properties: %{
-        "graph" => %Property{
-          name: "graph",
-          type: "paradigm_graph"
-        },
-        "graph_name" => %Property{
-          name: "name",
-          type: "string"
-        },
-        "instantiation_paradigm" => %Property{
-          name: "paradigm",
-          type: "registered_graph"
-        },
-        "instantiation_instance" => %Property{
-          name: "instance",
-          type: "registered_graph"
-        },
-        "instantiation_conformance_result" => %Property{
-          name: "conformance_result",
-          type: "conformance_result",
-          lower_bound: 0,
-          upper_bound: 1
-        },
-        "transform_name" => %Property{
-          name: "name",
-          type: "string"
-        },
-        "transform_transform" => %Property{
-          name: "transform",
-          type: "paradigm_transform"
-        },
-        "source_paradigm" => %Property{
-          name: "source",
-          type: "registered_graph"
-        },
-        "target_paradigm" => %Property{
-          name: "target",
-          type: "registered_graph"
-        },
-        "used_transform" => %Property{
-          name: "transform",
-          type: "transform"
-        },
-        "transform_source" => %Property{
-          name: "source",
-          type: "registered_graph"
-        },
-        "transform_target" => %Property{
-          name: "target",
-          type: "registered_graph",
-          lower_bound: 0
-        },
-        "transform_errors" => %Property{
-          name: "errors",
-          type: "string",
-          lower_bound: 0,
-          upper_bound: :infinity
-        },
-        "transform_warnings" => %Property{
-          name: "warnings",
-          type: "string",
-          lower_bound: 0,
-          upper_bound: :infinity
+          properties: %{
+            "transform" => %Property{
+              name: "transform",
+              type: "transform",
+              position: 0
+            },
+            "source" => %Property{
+              name: "source",
+              type: "registered_graph",
+              position: 1
+            },
+            "target" => %Property{
+              name: "target",
+              type: "registered_graph",
+              lower_bound: 0,
+              position: 2
+            },
+            "errors" => %Property{
+              name: "errors",
+              type: "string",
+              lower_bound: 0,
+              upper_bound: :infinity,
+              position: 3
+            },
+            "warnings" => %Property{
+              name: "warnings",
+              type: "string",
+              lower_bound: 0,
+              upper_bound: :infinity,
+              position: 4
+            }
+          }
         }
       }
     }

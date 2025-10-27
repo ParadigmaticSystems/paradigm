@@ -6,20 +6,19 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "container" => %Paradigm.Class{
               name: "Container",
-              owned_attributes: ["composite_parts"]
+              properties: %{
+                "compositeParts" => %Paradigm.Property{
+                  name: "compositeParts",
+                  is_composite: true,
+                  lower_bound: 1,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "part" => %Paradigm.Class{
               name: "Part",
-              owned_attributes: []
-            }
-          },
-          properties: %{
-            "composite_parts" => %Paradigm.Property{
-              name: "compositeParts",
-              is_composite: true,
-              lower_bound: 1,
-              upper_bound: :infinity,
-              type: "part"
+              properties: %{}
             }
           }
         }
@@ -63,15 +62,14 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "class1" => %Paradigm.Class{
               name: "TestClass",
-              owned_attributes: ["invalid_composite"]
-            }
-          },
-          properties: %{
-            "invalid_composite" => %Paradigm.Property{
-              name: "invalidComposite",
-              is_composite: true,
-              type: "string",
-              upper_bound: 2
+              properties: %{
+                "invalidComposite" => %Paradigm.Property{
+                  name: "invalidComposite",
+                  is_composite: true,
+                  type: "string",
+                  upper_bound: 2
+                }
+              }
             }
           }
         }
@@ -101,24 +99,31 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "container1" => %Paradigm.Class{
               name: "Container1",
-              owned_attributes: ["parts"]
+              properties: %{
+                "parts" => %Paradigm.Property{
+                  name: "parts",
+                  is_composite: true,
+                  lower_bound: 0,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "container2" => %Paradigm.Class{
               name: "Container2",
-              owned_attributes: ["parts"]
+              properties: %{
+                "parts" => %Paradigm.Property{
+                  name: "parts",
+                  is_composite: true,
+                  lower_bound: 0,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "part" => %Paradigm.Class{
               name: "Part",
-              owned_attributes: []
-            }
-          },
-          properties: %{
-            "parts" => %Paradigm.Property{
-              name: "parts",
-              is_composite: true,
-              lower_bound: 0,
-              upper_bound: :infinity,
-              type: "part"
+              properties: %{}
             }
           }
         }
@@ -164,20 +169,19 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "container" => %Paradigm.Class{
               name: "Container",
-              owned_attributes: ["container_parts"]
+              properties: %{
+                "parts" => %Paradigm.Property{
+                  name: "parts",
+                  is_composite: true,
+                  lower_bound: 1,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "part" => %Paradigm.Class{
               name: "Part",
-              owned_attributes: []
-            }
-          },
-          properties: %{
-            "container_parts" => %Paradigm.Property{
-              name: "parts",
-              is_composite: true,
-              lower_bound: 1,
-              upper_bound: :infinity,
-              type: "part"
+              properties: %{}
             }
           }
         }
@@ -217,20 +221,19 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "container" => %Paradigm.Class{
               name: "Container",
-              owned_attributes: ["container_parts"]
+              properties: %{
+                "parts" => %Paradigm.Property{
+                  name: "parts",
+                  is_composite: true,
+                  lower_bound: 1,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "part" => %Paradigm.Class{
               name: "Part",
-              owned_attributes: []
-            }
-          },
-          properties: %{
-            "container_parts" => %Paradigm.Property{
-              name: "parts",
-              is_composite: true,
-              lower_bound: 1,
-              upper_bound: :infinity,
-              type: "part"
+              properties: %{}
             }
           }
         }
@@ -265,20 +268,19 @@ defmodule Paradigm.Conformance.TestSuite.CompositeProperties do
           classes: %{
             "container" => %Paradigm.Class{
               name: "Container",
-              owned_attributes: ["container_parts"]
+              properties: %{
+                "parts" => %Paradigm.Property{
+                  name: "parts",
+                  is_composite: true,
+                  lower_bound: 1,
+                  upper_bound: :infinity,
+                  type: "part"
+                }
+              }
             },
             "part" => %Paradigm.Class{
               name: "Part",
-              owned_attributes: []
-            }
-          },
-          properties: %{
-            "container_parts" => %Paradigm.Property{
-              name: "parts",
-              is_composite: true,
-              lower_bound: 1,
-              upper_bound: :infinity,
-              type: "part"
+              properties: %{}
             }
           }
         }

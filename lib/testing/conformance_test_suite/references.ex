@@ -6,28 +6,27 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "cow" => %Paradigm.Class{
               name: "Cow",
-              owned_attributes: []
+              properties: %{}
             },
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "truck" => %Paradigm.Class{
               name: "Truck",
               super_classes: ["vehicle"],
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_ref"]
-            }
-          },
-          properties: %{
-            "vehicle_ref" => %Paradigm.Property{
-              name: "vehicleRef",
-              lower_bound: 1,
-              upper_bound: 1,
-              type: "vehicle"
+              properties: %{
+                "vehicleRef" => %Paradigm.Property{
+                  name: "vehicleRef",
+                  lower_bound: 1,
+                  upper_bound: 1,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -59,24 +58,23 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "truck" => %Paradigm.Class{
               name: "Truck",
               super_classes: ["vehicle"],
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_ref"]
-            }
-          },
-          properties: %{
-            "vehicle_ref" => %Paradigm.Property{
-              name: "vehicleRef",
-              lower_bound: 1,
-              upper_bound: 1,
-              type: "vehicle"
+              properties: %{
+                "vehicleRef" => %Paradigm.Property{
+                  name: "vehicleRef",
+                  lower_bound: 1,
+                  upper_bound: 1,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -113,19 +111,18 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_ref"]
-            }
-          },
-          properties: %{
-            "vehicle_ref" => %Paradigm.Property{
-              name: "vehicleRef",
-              lower_bound: 1,
-              upper_bound: 1,
-              type: "vehicle"
+              properties: %{
+                "vehicleRef" => %Paradigm.Property{
+                  name: "vehicleRef",
+                  lower_bound: 1,
+                  upper_bound: 1,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -155,19 +152,18 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_refs"]
-            }
-          },
-          properties: %{
-            "vehicle_refs" => %Paradigm.Property{
-              name: "vehicleRefs",
-              lower_bound: 0,
-              upper_bound: :infinity,
-              type: "vehicle"
+              properties: %{
+                "vehicleRefs" => %Paradigm.Property{
+                  name: "vehicleRefs",
+                  lower_bound: 0,
+                  upper_bound: :infinity,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -199,19 +195,18 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_refs"]
-            }
-          },
-          properties: %{
-            "vehicle_refs" => %Paradigm.Property{
-              name: "vehicleRefs",
-              lower_bound: 0,
-              upper_bound: :infinity,
-              type: "vehicle"
+              properties: %{
+                "vehicleRefs" => %Paradigm.Property{
+                  name: "vehicleRefs",
+                  lower_bound: 0,
+                  upper_bound: :infinity,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -250,19 +245,18 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "vehicle" => %Paradigm.Class{
               name: "Vehicle",
-              owned_attributes: []
+              properties: %{}
             },
             "garage" => %Paradigm.Class{
               name: "Garage",
-              owned_attributes: ["vehicle_ref"]
-            }
-          },
-          properties: %{
-            "vehicle_ref" => %Paradigm.Property{
-              name: "vehicleRef",
-              lower_bound: 1,
-              upper_bound: 1,
-              type: "vehicle"
+              properties: %{
+                "vehicleRef" => %Paradigm.Property{
+                  name: "vehicleRef",
+                  lower_bound: 1,
+                  upper_bound: 1,
+                  type: "vehicle"
+                }
+              }
             }
           }
         }
@@ -297,15 +291,14 @@ defmodule Paradigm.Conformance.TestSuite.References do
           classes: %{
             "property" => %Paradigm.Class{
               name: "Property",
-              owned_attributes: ["type_ref"]
-            }
-          },
-          properties: %{
-            "type_ref" => %Paradigm.Property{
-              name: "type",
-              lower_bound: 1,
-              upper_bound: 1,
-              type: "boolean"
+              properties: %{
+                "type" => %Paradigm.Property{
+                  name: "type",
+                  lower_bound: 1,
+                  upper_bound: 1,
+                  type: "boolean"
+                }
+              }
             }
           }
         }

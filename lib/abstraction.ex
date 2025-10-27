@@ -59,11 +59,17 @@ defmodule Paradigm.Abstraction do
 
   defp add_classes(graph, paradigm) do
     Enum.reduce(paradigm.classes, graph, fn {id, class}, acc ->
+      # Convert properties map to owned_attributes list for graph representation, sorted by position
+      owned_attributes =
+        class.properties
+        |> Map.values()
+        |> Enum.sort_by(& &1.position)
+        |> Enum.map(&%Ref{id: "#{id}_#{&1.name}", composite: true})
+
       data = %{
         "name" => class.name,
         "is_abstract" => class.is_abstract,
-        "owned_attributes" =>
-          Enum.map(class.owned_attributes || [], &%Ref{id: &1, composite: true}),
+        "owned_attributes" => owned_attributes,
         "super_classes" => Enum.map(class.super_classes || [], &%Ref{id: &1})
       }
 
@@ -105,38 +111,34 @@ defmodule Paradigm.Abstraction do
   end
 
   defp add_properties(graph, paradigm) do
-    Enum.reduce(paradigm.properties, graph, fn {id, property}, acc ->
-      data = %{
-        "name" => property.name,
-        "is_ordered" => property.is_ordered,
-        "type" =>
-          if(property.type,
-            do: %Ref{id: property.type, composite: property.is_composite},
-            else: nil
-          ),
-        "is_composite" => property.is_composite,
-        "lower_bound" => property.lower_bound,
-        "upper_bound" => property.upper_bound,
-        "default_value" => property.default_value
-      }
+    Enum.reduce(paradigm.classes, graph, fn {class_id, class}, acc ->
+      Enum.reduce(class.properties, acc, fn {property_name, property}, inner_acc ->
+        property_id = "#{class_id}_#{property_name}"
 
-      owner_class_id =
-        Enum.find_value(paradigm.classes, fn {class_id, class} ->
-          if Enum.member?(class.owned_attributes || [], id) do
-            class_id
-          else
-            nil
-          end
-        end)
+        data = %{
+          "name" => property.name,
+          "is_ordered" => property.is_ordered,
+          "type" =>
+            if(property.type,
+              do: %Ref{id: property.type, composite: property.is_composite},
+              else: nil
+            ),
+          "is_composite" => property.is_composite,
+          "lower_bound" => property.lower_bound,
+          "upper_bound" => property.upper_bound,
+          "default_value" => property.default_value,
+          "position" => property.position
+        }
 
-      node = %Node{
-        id: id,
-        class: "property",
-        data: data,
-        owned_by: owner_class_id
-      }
+        node = %Node{
+          id: property_id,
+          class: "property",
+          data: data,
+          owned_by: class_id
+        }
 
-      Paradigm.Graph.insert_node(acc, node)
+        Paradigm.Graph.insert_node(inner_acc, node)
+      end)
     end)
   end
 
@@ -169,15 +171,54 @@ defmodule Paradigm.Abstraction do
       end)
       |> Map.new()
 
+    # First get all properties to build the property map
+    all_properties =
+      Paradigm.Graph.get_all_nodes_of_class(graph, "property")
+      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
+      |> Enum.map(fn {id, node} ->
+        {id,
+         %Paradigm.Property{
+           name: node.data["name"],
+           is_ordered: node.data["is_ordered"],
+           type: extract_ref_id(node.data["type"]),
+           is_composite: node.data["is_composite"],
+           lower_bound: node.data["lower_bound"],
+           upper_bound: node.data["upper_bound"],
+           default_value: node.data["default_value"],
+           position: node.data["position"] || 0
+         }}
+      end)
+      |> Map.new()
+
     classes =
       Paradigm.Graph.get_all_nodes_of_class(graph, "class")
       |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
       |> Enum.map(fn {id, node} ->
+        # Get properties for this class from owned_attributes, preserving order
+        property_ids = extract_ref_ids(node.data["owned_attributes"])
+
+        properties =
+          property_ids
+          |> Enum.with_index()
+          |> Enum.map(fn {prop_id, index} ->
+            case Map.get(all_properties, prop_id) do
+              nil ->
+                nil
+
+              property ->
+                # If position wasn't set in the original property, use the index from owned_attributes
+                updated_property = %{property | position: property.position || index}
+                {property.name, updated_property}
+            end
+          end)
+          |> Enum.filter(&(&1 != nil))
+          |> Map.new()
+
         {id,
          %Paradigm.Class{
            name: node.data["name"],
            is_abstract: node.data["is_abstract"],
-           owned_attributes: extract_ref_ids(node.data["owned_attributes"]),
+           properties: properties,
            super_classes: extract_ref_ids(node.data["super_classes"])
          }}
       end)
@@ -195,31 +236,13 @@ defmodule Paradigm.Abstraction do
       end)
       |> Map.new()
 
-    properties =
-      Paradigm.Graph.get_all_nodes_of_class(graph, "property")
-      |> Enum.map(fn id -> {id, Paradigm.Graph.get_node(graph, id)} end)
-      |> Enum.map(fn {id, node} ->
-        {id,
-         %Paradigm.Property{
-           name: node.data["name"],
-           is_ordered: node.data["is_ordered"],
-           type: extract_ref_id(node.data["type"]),
-           is_composite: node.data["is_composite"],
-           lower_bound: node.data["lower_bound"],
-           upper_bound: node.data["upper_bound"],
-           default_value: node.data["default_value"]
-         }}
-      end)
-      |> Map.new()
-
     %Paradigm{
       name: Paradigm.Graph.get_name(graph),
       description: Paradigm.Graph.get_description(graph),
       primitive_types: primitive_types,
       packages: packages,
       classes: classes,
-      enumerations: enumerations,
-      properties: properties
+      enumerations: enumerations
     }
   end
 

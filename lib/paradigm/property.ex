@@ -6,7 +6,8 @@ defmodule Paradigm.Property do
           is_composite: boolean(),
           lower_bound: non_neg_integer(),
           upper_bound: non_neg_integer() | :infinity,
-          default_value: term() | nil
+          default_value: term() | nil,
+          position: non_neg_integer()
         }
   defstruct name: nil,
             type: nil,
@@ -14,5 +15,6 @@ defmodule Paradigm.Property do
             is_composite: false,
             lower_bound: 1,
             upper_bound: 1,
-            default_value: nil
+            default_value: nil,
+            position: 0
 end

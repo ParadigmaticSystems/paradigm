@@ -131,8 +131,8 @@ defmodule Paradigm.Conformance do
 
   defp validate_node_properties(node, node_id, paradigm, node_index) do
     class = paradigm.classes[node.class]
-    attributes = Paradigm.get_all_attributes(class, paradigm)
-    properties = Enum.map(attributes, &paradigm.properties[&1])
+    properties_map = Paradigm.get_all_properties(class, paradigm)
+    properties = Map.values(properties_map)
 
     [
       validate_property_coverage(node, node_id, properties),
@@ -395,7 +395,7 @@ defmodule Paradigm.Conformance do
       Paradigm.Graph.stream_all_nodes(graph)
       |> Enum.reduce(%{}, fn node, acc ->
         Enum.reduce(node.data, acc, fn {property_name, value}, inner_acc ->
-          collect_composite_references(node.id, property_name, value, paradigm, inner_acc)
+          collect_composite_references(node, property_name, value, paradigm, inner_acc)
         end)
       end)
 
@@ -417,21 +417,30 @@ defmodule Paradigm.Conformance do
     end)
   end
 
-  defp collect_composite_references(owner_node_id, property_name, value, paradigm, acc) do
-    case Map.get(paradigm.properties, property_name) do
-      %{is_composite: true} = _property ->
-        refs = extract_refs(value)
+  defp collect_composite_references(node, property_name, value, paradigm, acc) do
+    # Get the property from the node's class hierarchy
+    case get_class_safe(paradigm, node.class) do
+      {:ok, class} ->
+        properties_map = Paradigm.get_all_properties(class, paradigm)
 
-        Enum.reduce(refs, acc, fn %Ref{id: referenced_id}, inner_acc ->
-          Map.update(
-            inner_acc,
-            referenced_id,
-            [{owner_node_id, property_name, owner_node_id}],
-            fn existing_owners ->
-              [{owner_node_id, property_name, hd(existing_owners) |> elem(2)} | existing_owners]
-            end
-          )
-        end)
+        case Map.get(properties_map, property_name) do
+          %{is_composite: true} = _property ->
+            refs = extract_refs(value)
+
+            Enum.reduce(refs, acc, fn %Ref{id: referenced_id}, inner_acc ->
+              Map.update(
+                inner_acc,
+                referenced_id,
+                [{node.id, property_name, node.id}],
+                fn existing_owners ->
+                  [{node.id, property_name, hd(existing_owners) |> elem(2)} | existing_owners]
+                end
+              )
+            end)
+
+          _ ->
+            acc
+        end
 
       _ ->
         acc

@@ -25,165 +25,167 @@ defmodule Paradigm.Builtin.Metamodel do
         "class" => %Class{
           name: "Class",
           is_abstract: false,
-          owned_attributes: ["class_is_abstract", "class_owned_attributes", "class_super_classes"],
+          properties: %{
+            "is_abstract" => %Property{
+              name: "is_abstract",
+              type: "boolean",
+              default_value: false,
+              position: 0
+            },
+            "owned_attributes" => %Property{
+              name: "owned_attributes",
+              type: "property",
+              is_ordered: true,
+              is_composite: true,
+              lower_bound: 0,
+              upper_bound: :infinity,
+              default_value: [],
+              position: 1
+            },
+            "super_classes" => %Property{
+              name: "super_classes",
+              type: "class",
+              is_ordered: false,
+              is_composite: false,
+              lower_bound: 0,
+              upper_bound: :infinity,
+              default_value: [],
+              position: 2
+            }
+          },
           super_classes: ["type"]
         },
         "enumeration" => %Class{
           name: "Enumeration",
           is_abstract: false,
-          owned_attributes: ["enumeration_literals"],
+          properties: %{
+            "literals" => %Property{
+              name: "literals",
+              type: "string",
+              is_ordered: true,
+              is_composite: false,
+              lower_bound: 0,
+              upper_bound: :infinity,
+              default_value: [],
+              position: 0
+            }
+          },
           super_classes: ["type"]
         },
         "package" => %Class{
           name: "Package",
           is_abstract: false,
-          owned_attributes: [
-            "package_name",
-            "package_uri",
-            "package_nested_packages",
-            "package_owned_types"
-          ],
+          properties: %{
+            "name" => %Property{
+              name: "name",
+              type: "string",
+              position: 0
+            },
+            "uri" => %Property{
+              name: "uri",
+              type: "string",
+              position: 1
+            },
+            "nested_packages" => %Property{
+              name: "nested_packages",
+              type: "package",
+              is_ordered: false,
+              is_composite: true,
+              lower_bound: 0,
+              upper_bound: :infinity,
+              default_value: [],
+              position: 2
+            },
+            "owned_types" => %Property{
+              name: "owned_types",
+              type: "type",
+              is_ordered: false,
+              is_composite: true,
+              lower_bound: 0,
+              upper_bound: :infinity,
+              default_value: [],
+              position: 3
+            }
+          },
           super_classes: []
         },
         "primitive_type" => %Class{
           name: "PrimitiveType",
           is_abstract: false,
-          owned_attributes: [],
+          properties: %{},
           super_classes: ["type"]
         },
         "property" => %Class{
           name: "Property",
           is_abstract: false,
-          owned_attributes: [
-            "property_name",
-            "property_type",
-            "property_is_ordered",
-            "property_is_composite",
-            "property_lower_bound",
-            "property_upper_bound",
-            "property_default_value"
-          ],
+          properties: %{
+            "name" => %Property{
+              name: "name",
+              type: "string",
+              position: 0
+            },
+            "type" => %Property{
+              name: "type",
+              type: "type",
+              is_ordered: false,
+              is_composite: false,
+              lower_bound: 1,
+              upper_bound: 1,
+              position: 1
+            },
+            "is_ordered" => %Property{
+              name: "is_ordered",
+              type: "boolean",
+              default_value: false,
+              position: 2
+            },
+            "is_composite" => %Property{
+              name: "is_composite",
+              type: "boolean",
+              default_value: false,
+              position: 3
+            },
+            "lower_bound" => %Property{
+              name: "lower_bound",
+              type: "integer",
+              default_value: 1,
+              position: 4
+            },
+            "upper_bound" => %Property{
+              name: "upper_bound",
+              type: "integer",
+              position: 5
+            },
+            "default_value" => %Property{
+              name: "default_value",
+              type: "string",
+              lower_bound: 0,
+              upper_bound: 1,
+              position: 6
+            },
+            "position" => %Property{
+              name: "position",
+              type: "integer",
+              default_value: 0,
+              position: 7
+            }
+          },
           super_classes: []
         },
         "type" => %Class{
           name: "Type",
           is_abstract: true,
-          owned_attributes: ["type_name"],
+          properties: %{
+            "name" => %Property{
+              name: "name",
+              type: "string",
+              position: 0
+            }
+          },
           super_classes: []
         }
       },
-      enumerations: %{},
-      properties: %{
-        "class_is_abstract" => %Property{
-          name: "is_abstract",
-          type: "boolean",
-          default_value: false
-        },
-        "class_owned_attributes" => %Property{
-          name: "owned_attributes",
-          type: "property",
-          is_ordered: true,
-          is_composite: true,
-          lower_bound: 0,
-          upper_bound: :infinity,
-          default_value: []
-        },
-        "class_super_classes" => %Property{
-          name: "super_classes",
-          type: "class",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 0,
-          upper_bound: :infinity,
-          default_value: []
-        },
-        "enumeration_literal_name" => %Property{
-          name: "name",
-          type: "string",
-          default_value: nil
-        },
-        "enumeration_literals" => %Property{
-          name: "literals",
-          type: "string",
-          is_ordered: true,
-          is_composite: false,
-          lower_bound: 0,
-          upper_bound: :infinity,
-          default_value: []
-        },
-        "package_name" => %Property{
-          name: "name",
-          type: "string",
-          default_value: nil
-        },
-        "package_nested_packages" => %Property{
-          name: "nested_packages",
-          type: "package",
-          is_ordered: true,
-          is_composite: true,
-          lower_bound: 0,
-          upper_bound: :infinity,
-          default_value: []
-        },
-        "package_owned_types" => %Property{
-          name: "owned_types",
-          type: "class",
-          is_ordered: true,
-          is_composite: true,
-          lower_bound: 0,
-          upper_bound: :infinity,
-          default_value: []
-        },
-        "package_uri" => %Property{
-          name: "uri",
-          type: "string",
-          default_value: nil
-        },
-        "property_is_composite" => %Property{
-          name: "is_composite",
-          type: "boolean",
-          default_value: false
-        },
-        "property_is_ordered" => %Property{
-          name: "is_ordered",
-          type: "boolean",
-          default_value: false
-        },
-        "property_lower_bound" => %Property{
-          name: "lower_bound",
-          type: "integer",
-          default_value: 1
-        },
-        "property_name" => %Property{
-          name: "name",
-          type: "string",
-          default_value: nil
-        },
-        "property_type" => %Property{
-          name: "type",
-          type: "type",
-          default_value: nil
-        },
-        "property_upper_bound" => %Property{
-          name: "upper_bound",
-          type: "integer",
-          default_value: 1
-        },
-        "property_default_value" => %Property{
-          name: "default_value",
-          type: "string",
-          is_ordered: false,
-          is_composite: false,
-          lower_bound: 0,
-          upper_bound: 1,
-          default_value: nil
-        },
-        "type_name" => %Property{
-          name: "name",
-          type: "string",
-          default_value: nil
-        }
-      }
+      enumerations: %{}
     }
   end
 end
