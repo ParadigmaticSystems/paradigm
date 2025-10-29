@@ -7,18 +7,13 @@ defmodule Paradigm.Universe do
   alias Paradigm.Graph.Node
   alias Paradigm.Graph.Node.Ref
 
-  def generate_graph_id(graph) do
-    Base.encode16(:crypto.hash(:sha256, :erlang.term_to_binary(graph)))
-    |> String.slice(-5..-1)
-  end
-
   def insert_graph_with_paradigm_by_name(universe, graph, name, paradigm_name) do
     paradigm_id = find_by_name(universe, paradigm_name)
     insert_graph_with_paradigm(universe, graph, name, paradigm_id)
   end
 
   def insert_graph_with_paradigm(universe, graph, name, paradigm_id) do
-    id = generate_graph_id(graph)
+    id = Paradigm.Graph.get_content_hash(graph)
 
     registered_graph_node = %Node{
       id: id,
@@ -69,7 +64,7 @@ defmodule Paradigm.Universe do
   def add_metamodel(universe) do
     metamodel = Paradigm.Builtin.Metamodel.definition()
     metamodel_graph = metamodel |> Paradigm.Abstraction.embed()
-    metamodel_id = Paradigm.Universe.generate_graph_id(metamodel_graph)
+    metamodel_id = Paradigm.Graph.get_content_hash(metamodel_graph)
 
     universe
     |> Paradigm.Universe.insert_graph_with_paradigm(metamodel_graph, "Metamodel", metamodel_id)
@@ -130,6 +125,9 @@ defmodule Paradigm.Universe do
 
   def propagate() do
     Paradigm.ClassBasedTransform.new()
+    |> Paradigm.ClassBasedTransform.with_default(
+      fn node -> node end
+    )
     |> Paradigm.ClassBasedTransform.for_class(
       "registered_graph",
       &update_conformance_check_if_needed/2
@@ -148,7 +146,7 @@ defmodule Paradigm.Universe do
         %Node{registered_graph_node | data: updated_data}
 
       _ ->
-        []
+        registered_graph_node
     end
   end
 
@@ -166,7 +164,8 @@ defmodule Paradigm.Universe do
   end
 
   defp apply_missing_transforms(transform_node, %{graph: universe}) do
-    universe
+    [transform_node] ++
+    (universe
     |> find_valid_instantiations_of(transform_node.data["source"].id)
     |> Enum.flat_map(fn instance_id ->
       case find_existing_transform_instance(universe, transform_node.id, instance_id) do
@@ -176,7 +175,7 @@ defmodule Paradigm.Universe do
         _existing ->
           []
       end
-    end)
+    end))
   end
 
   defp find_valid_instantiations_of(universe, paradigm_id) do
@@ -215,11 +214,11 @@ defmodule Paradigm.Universe do
     %{"transform" => transform, "name" => transform_name, "target" => transform_target} =
       transform_node.data
 
-    target_graph = Paradigm.Graph.MapGraph.new(source_graph.metadata)
+    target_graph = Paradigm.Graph.MapGraph.new()
     {:ok, result_graph} = Paradigm.Transform.transform(transform, source_graph, target_graph)
-    target_id = Paradigm.Universe.generate_graph_id(result_graph)
+    target_id = Paradigm.Graph.get_content_hash(result_graph)
 
-    [
+    [ transform_node,
       %Node{
         id: "#{transform_name}_from_#{source_graph_id}_to_#{target_id}",
         class: "transform_instance",
