@@ -4,7 +4,7 @@ defmodule Paradigm.MixProject do
   def project do
     [
       app: :paradigm,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -16,10 +16,10 @@ defmodule Paradigm.MixProject do
         logo: "assets/logo.svg",
         favicon: "assets/favicon.png",
         nest_modules_by_prefix: [
-          Paradigm.Conformance,
           Paradigm.Graph,
-          Paradigm.Canonical,
-          Paradigm.Transform
+          Paradigm.Transform,
+          Paradigm.Conformance,
+          Paradigm.Builtin
         ],
         groups_for_modules: [
           "Paradigm Data Types": [
@@ -30,6 +30,21 @@ defmodule Paradigm.MixProject do
             Paradigm.Property,
             Paradigm.Enumeration,
             Paradigm.EnumerationLiteral
+          ],
+          Testing: [
+            Paradigm.Conformance.TestSuite,
+            Paradigm.Conformance.TestSuite.BasicValidation,
+            Paradigm.Conformance.TestSuite.CompositeProperties,
+            Paradigm.Conformance.TestSuite.Multiplicity,
+            Paradigm.Conformance.TestSuite.References,
+            Paradigm.Graph.TestSuite,
+            Paradigm.Graph.TestSuite.BasicGraphFunctions,
+            Paradigm.Graph.TestSuite.DiffTests
+          ],
+          "Graph Implementations": [
+            Paradigm.Graph.MapGraph,
+            Paradigm.Graph.GitRepoGraph,
+            Paradigm.Graph.FilesystemGraph
           ]
         ]
       ]
@@ -37,7 +52,7 @@ defmodule Paradigm.MixProject do
   end
 
   defp description do
-    "A modeling framework for formal abstraction relationships between models and data, supporting multi-layered structures with pluggable graph backends."
+    "A model management framework supporting multi-layered abstraction structures, pluggable data layers, and arbitrary command-line transform tools."
   end
 
   defp package do

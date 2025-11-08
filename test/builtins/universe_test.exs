@@ -25,8 +25,8 @@ defmodule UniverseTest do
 
     test "propagates along the identity transform" do
       identity_transform =
-        Paradigm.ClassBasedTransform.new()
-        |> Paradigm.ClassBasedTransform.with_default(fn node -> node end)
+        Paradigm.Transform.ClassBasedTransform.new()
+        |> Paradigm.Transform.ClassBasedTransform.with_default(fn node -> node end)
 
       universe =
         Paradigm.Universe.bootstrap()

@@ -3,7 +3,7 @@ defmodule Paradigm.Graph.MapGraphTest do
   alias Paradigm.Graph.MapGraph
   alias Paradigm.Graph.Node
 
-  use Paradigm.GraphTestSuite, graph_impl: Paradigm.Graph.MapGraph
+  use Paradigm.Graph.TestSuite, graph_impl: Paradigm.Graph.MapGraph
 
   describe "new/1" do
     test "creates a new MapGraph with empty nodes" do

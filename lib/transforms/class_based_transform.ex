@@ -1,4 +1,4 @@
-defmodule Paradigm.ClassBasedTransform do
+defmodule Paradigm.Transform.ClassBasedTransform do
   defstruct transforms: %{}, default_transform: nil
 
   def new(opts \\ []) do
@@ -31,8 +31,8 @@ defmodule Paradigm.ClassBasedTransform do
   end
 end
 
-defimpl Paradigm.Transform, for: Paradigm.ClassBasedTransform do
-  def transform(%Paradigm.ClassBasedTransform{} = transformer, source, target, _opts) do
+defimpl Paradigm.Transform, for: Paradigm.Transform.ClassBasedTransform do
+  def transform(%Paradigm.Transform.ClassBasedTransform{} = transformer, source, target, _opts) do
     source
     |> Paradigm.Graph.stream_all_nodes()
     |> Enum.reduce_while({:ok, target}, fn node, {:ok, acc} ->

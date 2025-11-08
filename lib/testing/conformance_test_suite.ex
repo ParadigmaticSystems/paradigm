@@ -1,4 +1,4 @@
-defmodule Paradigm.ConformanceTestSuite do
+defmodule Paradigm.Conformance.TestSuite do
   @moduledoc """
   Complete conformance test suite that can be used with any graph implementation.
   """

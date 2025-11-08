@@ -1,4 +1,4 @@
-defmodule Paradigm.PipelineTransform do
+defmodule Paradigm.Transform.PipelineTransform do
   defstruct [:steps]
 
   def new(steps \\ []) when is_list(steps) do
@@ -10,8 +10,8 @@ defmodule Paradigm.PipelineTransform do
   end
 end
 
-defimpl Paradigm.Transform, for: Paradigm.PipelineTransform do
-  def transform(%Paradigm.PipelineTransform{steps: steps}, source, target, opts) do
+defimpl Paradigm.Transform, for: Paradigm.Transform.PipelineTransform do
+  def transform(%Paradigm.Transform.PipelineTransform{steps: steps}, source, target, opts) do
     steps_with_index = Enum.with_index(steps)
     last_index = length(steps) - 1
 

@@ -231,28 +231,6 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.GitRepoGraph do
   end
 
   @impl true
-  def get_node_data(%{root: root_path}, node_id, property_name) do
-    case get_node(%{root: root_path}, node_id) do
-      nil ->
-        :error
-
-      node ->
-        case Map.fetch(node.data, property_name) do
-          {:ok, value} -> {:ok, value}
-          :error -> :error
-        end
-    end
-  end
-
-  @impl true
-  def get_node_data(%{root: root_path}, node_id, property_name, default) do
-    case get_node(%{root: root_path}, node_id) do
-      nil -> default
-      node -> Map.get(node.data, property_name, default)
-    end
-  end
-
-  @impl true
   def follow_reference(%{root: root_path} = git_graph, node_id, reference_property) do
     case {node_id, reference_property} do
       {"repository", "branches"} ->

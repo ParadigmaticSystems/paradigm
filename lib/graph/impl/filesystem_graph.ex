@@ -108,7 +108,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
         parent_path = Path.dirname(full_path)
 
         owned_by =
-          if parent_path != full_path do
+          if parent_path != full_path and full_path != root_path do
             make_relative(root_path, parent_path)
           else
             nil
@@ -125,7 +125,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
         parent_path = Path.dirname(full_path)
 
         owned_by =
-          if parent_path != full_path do
+          if parent_path != full_path and full_path != root_path do
             make_relative(root_path, parent_path)
           else
             nil
@@ -191,25 +191,6 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
   end
 
   @impl true
-  def get_node_data(%{root: root_path}, node_id, property_name, default \\ nil) do
-    full_path = resolve_path(root_path, node_id)
-
-    case File.stat(full_path) do
-      {:ok, %File.Stat{type: type}} ->
-        data =
-          case type do
-            :regular -> build_file_data(full_path, root_path)
-            :directory -> build_folder_data(full_path, root_path)
-          end
-
-        Map.get(data, property_name, default)
-
-      {:error, _} ->
-        default
-    end
-  end
-
-  @impl true
   def follow_reference(%{root: root_path} = fs_graph, node_id, reference_property) do
     full_path = resolve_path(root_path, node_id)
 
@@ -217,7 +198,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
       "parent" ->
         parent_path = Path.dirname(full_path)
 
-        if parent_path != full_path do
+        if parent_path != full_path and full_path != root_path do
           get_node(fs_graph, make_relative(root_path, parent_path))
         else
           nil
@@ -309,7 +290,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     parent_path = Path.dirname(full_path)
 
     parent_ref =
-      if parent_path != full_path do
+      if parent_path != full_path and full_path != root_path do
         %Node.Ref{id: make_relative(root_path, parent_path), composite: false}
       else
         nil
@@ -339,7 +320,7 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.FilesystemGraph do
     parent_path = Path.dirname(full_path)
 
     parent_ref =
-      if parent_path != full_path do
+      if parent_path != full_path and full_path != root_path do
         %Node.Ref{id: make_relative(root_path, parent_path), composite: true}
       else
         nil

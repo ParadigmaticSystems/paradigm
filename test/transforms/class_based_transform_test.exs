@@ -10,9 +10,9 @@ defmodule ClassBasedTransformTest do
 
   test "empty transform", %{graph: graph} do
     empty_transform =
-      Paradigm.ClassBasedTransform.new()
+      Paradigm.Transform.ClassBasedTransform.new()
       # Redundant
-      |> Paradigm.ClassBasedTransform.with_default(fn _ -> [] end)
+      |> Paradigm.Transform.ClassBasedTransform.with_default(fn _ -> [] end)
 
     {:ok, transformed_graph} =
       Paradigm.Transform.transform(empty_transform, graph, Paradigm.Graph.MapGraph.new())
@@ -22,8 +22,8 @@ defmodule ClassBasedTransformTest do
 
   test "identity transform copies graph", %{graph: graph} do
     identity_transform =
-      Paradigm.ClassBasedTransform.new()
-      |> Paradigm.ClassBasedTransform.with_default(fn node -> node end)
+      Paradigm.Transform.ClassBasedTransform.new()
+      |> Paradigm.Transform.ClassBasedTransform.with_default(fn node -> node end)
 
     {:ok, transformed_graph} =
       Paradigm.Transform.transform(identity_transform, graph, Paradigm.Graph.MapGraph.new())
@@ -33,8 +33,8 @@ defmodule ClassBasedTransformTest do
 
   test "copy out a subset of nodes and capitalize their IDs", %{graph: graph} do
     primitives_grabber =
-      Paradigm.ClassBasedTransform.new()
-      |> Paradigm.ClassBasedTransform.for_class("primitive_type", fn node ->
+      Paradigm.Transform.ClassBasedTransform.new()
+      |> Paradigm.Transform.ClassBasedTransform.for_class("primitive_type", fn node ->
         %{node | id: String.upcase(node.id)}
       end)
 

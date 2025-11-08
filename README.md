@@ -1,12 +1,10 @@
 # Paradigm Overview
 
-**Paradigm** is a framework for the uniform treatment of different objects as **graph** data with **conformance** and **transformation** relationships. It provides mathematically-grounded primitives for protocol interoperability and model-to-code generation.
+**Paradigm** is a model management framework supporting uniform treatment of heterogeneous resources as **graph** data with **conformance** and **transformation** relationships. It provides mathematically-grounded primitives supporting protocol interoperability, model-to-code generation, and rapid integration.
 
-Your **Universe** of discourse is bootstrapped from a built-in **meta-metamodel** which conforms to itself. Different **Paradigms** are introduced as meta-models for objects under scrutiny, such as filesystem contents or data models of a particular format.
+Your **Universe** of discourse is bootstrapped from a built-in **metamodel** which conforms to itself. Different **Paradigms** are introduced as models for objects under scrutiny, such as filesystem contents or data models of a particular format. Graph data is decoupled from its physical form by the graph protocol. So you can have (for example) an XML file specifying the conformance of filesystem objects, or vice versa.
 
-New levels of abstraction are created by introducing transforms at the metamodel level. For example, a schema starts as data of its metamodel, but becomes a model itself in some obvious way. Then we can work with data that conforms to the schema.
-
-Graph data is decoupled from its physical form by the graph protocol. So you can have (for example) an XML file specifying the conformance of filesystem objects, or vice versa.
+New levels of abstraction are created by introducing transforms at the metamodel level. For example, a schema starts as data of its metamodel, but becomes a model itself in some (hopefully obvious) way. Then we can work with data that conforms to the schema. Some illustrative demos are available at [paradigmpro.live](https://paradigmpro.live/).
 
 ## Structure
 
@@ -56,7 +54,7 @@ The embedded metamodel validates against itself:
 Paradigm.Conformance.check_graph(embedded_metamodel, metamodel_paradigm)
 ```
 
-Or if a graph is passed, the module will attempt to extract a paradigm:
+Or if 2 graph objects are passed, the module will attempt to use the `Abstraction` module to produce a paradigm from the 2nd one:
 ```elixir
 Paradigm.Conformance.check_graph(embedded_metamodel, embedded_metamodel)
 ```
@@ -71,7 +69,7 @@ They are invoked with `transform(transformer, source, target, opts)`.
 * target is a graph (not necessarily different or empty, just where new nodes will be added)
 * opts allows configuration.
 
-The simple case is handled with a helper function:
+A simple configuration-free transform case is handled with a helper function:
 ```elixir
   def transform(transformer, source) do
     target = Paradigm.Graph.MapGraph.new()
@@ -154,7 +152,7 @@ If available in [Hex](https://hex.pm/docs/publish), add `paradigm` to your list 
 ```elixir
 def deps do
   [
-    {:paradigm, "~> 0.1.0"}
+    {:paradigm, "~> 0.3.0"}
   ]
 end
 ```

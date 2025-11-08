@@ -1,4 +1,4 @@
-defmodule Paradigm.GraphTestSuite do
+defmodule Paradigm.Graph.TestSuite do
   @moduledoc """
   Complete graph test suite that can be used with any graph implementation.
   """

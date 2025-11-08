@@ -94,10 +94,14 @@ defmodule Paradigm.Universe do
   end
 
   def find_by_name(universe, name) do
-    Paradigm.Graph.get_all_nodes_of_class(universe, "registered_graph")
-    |> Enum.find(fn id ->
-      Paradigm.Graph.get_node_data(universe, id, "name", "") == name
+    Paradigm.nodes_of_type(universe, "registered_graph")
+    |> Enum.find(fn node ->
+      node.data["name"] == name
     end)
+    |> case do
+      nil -> nil
+      node -> node.id
+    end
   end
 
   def apply_propagate(universe) do
@@ -107,9 +111,9 @@ defmodule Paradigm.Universe do
 
   def all_instantiations_conformant?(universe) do
     universe
-    |> Graph.get_all_nodes_of_class("registered_graph")
-    |> Enum.all?(fn node_id ->
-      case Graph.get_node_data(universe, node_id, "conformance_result", nil) do
+    |> Paradigm.nodes_of_type("registered_graph")
+    |> Enum.all?(fn node ->
+      case node.data["conformance_result"] do
         nil -> false
         result -> result.issues == []
       end
@@ -124,15 +128,13 @@ defmodule Paradigm.Universe do
   end
 
   def propagate() do
-    Paradigm.ClassBasedTransform.new()
-    |> Paradigm.ClassBasedTransform.with_default(
-      fn node -> node end
-    )
-    |> Paradigm.ClassBasedTransform.for_class(
+    Paradigm.Transform.ClassBasedTransform.new()
+    |> Paradigm.Transform.ClassBasedTransform.with_default(fn node -> node end)
+    |> Paradigm.Transform.ClassBasedTransform.for_class(
       "registered_graph",
       &update_conformance_check_if_needed/2
     )
-    |> Paradigm.ClassBasedTransform.for_class("transform", &apply_missing_transforms/2)
+    |> Paradigm.Transform.ClassBasedTransform.for_class("transform", &apply_missing_transforms/2)
   end
 
   defp update_conformance_check_if_needed(registered_graph_node, %{graph: universe}) do
@@ -165,17 +167,17 @@ defmodule Paradigm.Universe do
 
   defp apply_missing_transforms(transform_node, %{graph: universe}) do
     [transform_node] ++
-    (universe
-    |> find_valid_instantiations_of(transform_node.data["source"].id)
-    |> Enum.flat_map(fn instance_id ->
-      case find_existing_transform_instance(universe, transform_node.id, instance_id) do
-        nil ->
-          create_transform_instance(universe, transform_node.id, instance_id)
+      (universe
+       |> find_valid_instantiations_of(transform_node.data["source"].id)
+       |> Enum.flat_map(fn instance_id ->
+         case find_existing_transform_instance(universe, transform_node.id, instance_id) do
+           nil ->
+             create_transform_instance(universe, transform_node.id, instance_id)
 
-        _existing ->
-          []
-      end
-    end))
+           _existing ->
+             []
+         end
+       end))
   end
 
   defp find_valid_instantiations_of(universe, paradigm_id) do
@@ -218,7 +220,8 @@ defmodule Paradigm.Universe do
     {:ok, result_graph} = Paradigm.Transform.transform(transform, source_graph, target_graph)
     target_id = Paradigm.Graph.get_content_hash(result_graph)
 
-    [ transform_node,
+    [
+      transform_node,
       %Node{
         id: "#{transform_name}_from_#{source_graph_id}_to_#{target_id}",
         class: "transform_instance",

@@ -89,36 +89,6 @@ defmodule Paradigm.Graph.TestSuite.BasicGraphFunctions do
         assert Enum.any?(streamed_nodes, &(&1.id == "node2"))
       end
 
-      test "get_node_data retrieves node data correctly" do
-        node = %Paradigm.Graph.Node{
-          id: "node1",
-          class: "class1",
-          data: %{"prop1" => "value1", "prop2" => "value2"}
-        }
-
-        graph = build_graph(node)
-
-        assert Paradigm.Graph.get_node_data(graph, "node1", "prop1") == {:ok, "value1"}
-        assert Paradigm.Graph.get_node_data(graph, "node1", "nonexistent") == :error
-        assert Paradigm.Graph.get_node_data(graph, "nonexistent_node", "prop1") == :error
-      end
-
-      test "get_node_data with default returns correctly" do
-        node = %Paradigm.Graph.Node{
-          id: "node1",
-          class: "class1",
-          data: %{"prop1" => "value1"}
-        }
-
-        graph = build_graph(node)
-
-        assert Paradigm.Graph.get_node_data(graph, "node1", "prop1", "default") == "value1"
-        assert Paradigm.Graph.get_node_data(graph, "node1", "nonexistent", "default") == "default"
-
-        assert Paradigm.Graph.get_node_data(graph, "nonexistent_node", "prop1", "default") ==
-                 "default"
-      end
-
       test "follow_reference works with node references" do
         target_node = %Paradigm.Graph.Node{id: "target", class: "class1", data: %{}}
 

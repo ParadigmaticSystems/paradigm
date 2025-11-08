@@ -84,32 +84,16 @@ defimpl Paradigm.Graph, for: Paradigm.Graph.MapGraph do
   end
 
   @impl true
-  def get_node_data(%{nodes: graph}, node_id, key) do
+  def follow_reference(%{nodes: graph}, node_id, reference_key) do
     case graph[node_id] do
-      %Node{data: data} ->
-        case Map.fetch(data, key) do
-          {:ok, value} -> {:ok, value}
-          :error -> :error
-        end
-
       nil ->
-        :error
-    end
-  end
+        nil
 
-  @impl true
-  def get_node_data(%{nodes: graph}, node_id, key, default \\ nil) do
-    case graph[node_id] do
-      %Node{data: data} -> Map.get(data, key, default)
-      nil -> default
-    end
-  end
-
-  @impl true
-  def follow_reference(%{nodes: graph} = map_graph, node_id, reference_key) do
-    case get_node_data(map_graph, node_id, reference_key) do
-      :error -> nil
-      {:ok, %Node.Ref{id: ref_id}} -> graph[ref_id]
+      node ->
+        case Map.get(node.data, reference_key) do
+          %Node.Ref{id: ref_id} -> graph[ref_id]
+          _ -> nil
+        end
     end
   end
 

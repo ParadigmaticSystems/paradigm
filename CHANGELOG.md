@@ -5,18 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2025-11-08
 ### Added
+- Explicit `Paradigm.Graph.Node.Ref` struct and `owned_by` / `composite` semantics.
 - `Graph.Canonical` module with tests for changing from Graphs to Elixir structs and back.
-- Helper functions in the `Universe` and `Conformance` modules
-- Introduced transform driver `Paradigm.Transform/apply_class_transform/3` abstracting a common pattern
+- Extended `Graph` protocol with `stream_all_nodes/1` and metadata getters.
+- `GitRepo` graph adapter
 ### Changed
+- Refactored the `Graph` test suite so it can exercise implementations in a reusable way
 - Relabeled built-in Paradigms as "Builtin" rather than "Canonical" to free up the term.
-- Extended `Paradigm.Graph.Node` to internalize node id and capture is_composite semantics.
+- Extended `Paradigm.Graph.Node` to internalize node id
+- Pulled `Class` properties onto the struct instead of holding them in the top-level `Paradigm`.
+- Added `position` field to `Property`.
 - Simplified and changed the signature of the `Paradigm.Graph.insert_node/2` protocol callback.
-- Introduced explicit `Paradigm.Graph.Node.Ref` struct instead of using raw pointers.
 ### Fixed
 - The MapGraph normalizes property keys to strings to avoid conformance issues.
+- Some bugs in Graph diff edge cases.
 
 ## [0.2.0] - 2025-08-11
 

@@ -22,13 +22,13 @@ defmodule PipelineTransformTest do
     end
 
     identity_class_transform =
-      Paradigm.ClassBasedTransform.new()
-      |> Paradigm.ClassBasedTransform.with_default(fn node -> node end)
+      Paradigm.Transform.ClassBasedTransform.new()
+      |> Paradigm.Transform.ClassBasedTransform.with_default(fn node -> node end)
 
     pipeline = [non_transform, identity_fn_transform, identity_class_transform]
 
     pipeline_transform =
-      Paradigm.PipelineTransform.new(pipeline)
+      Paradigm.Transform.PipelineTransform.new(pipeline)
 
     {:ok, transformed_graph} =
       Paradigm.Transform.transform(pipeline_transform, graph, Paradigm.Graph.MapGraph.new(), [])
