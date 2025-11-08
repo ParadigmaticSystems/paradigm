@@ -69,7 +69,7 @@ They are invoked with `transform(transformer, source, target, opts)`.
 * target is a graph (not necessarily different or empty, just where new nodes will be added)
 * opts allows configuration.
 
-A simple configuration-free transform case is handled with a helper function:
+A simple helper function handles the configuration-free transform case holding the results in memory:
 ```elixir
   def transform(transformer, source) do
     target = Paradigm.Graph.MapGraph.new()
@@ -91,13 +91,13 @@ end
 ```
 
 ### Class-based transforms
-`Paradigm.ClassBasedTransform` encapsulates a common pattern:
+`Paradigm.Transform.ClassBasedTransform` encapsulates a common pattern:
 1) Select all nodes of a given type
 2) For each one, produce 1 or more resulting nodes
 3) Reduce across the target graph, inserting them all
 We can get rid of a lot of repeated code with a builder pattern:
 ```elixir
-import Paradigm.ClassBasedTransform
+import Paradigm.Transform.ClassBasedTransform
 new()
 |> with_default(fn node -> node end) # Copy all by default
 |> rename_class("class1", "class2")  # A simple rename helper
@@ -121,7 +121,7 @@ new()
 Here you can see the flexibility, as the class-based transform function has access to the node and the full graph, and returns an arbitrary list of nodes.
 
 ### Pipeline Transforms
-`Paradigm.PipelineTransform` allows transforms to be composed arbitrarily.
+`Paradigm.Transform.PipelineTransform` allows transforms to be composed arbitrarily.
 
 ```elixir
 PipelineTransform.new([transform1, transform2, transform3])
@@ -134,9 +134,9 @@ This means memory should be considered, and "cumulative" effects need to be expl
 The `Paradigm.Builtin.Universe` paradigm is a system-level model treating `Paradigm.Graph` and `Paradigm.Transform` objects as primitive types. The `Paradigm.Universe` module provides helper functions for working with Universe graphs, including content-addressed (inner) graphs.
 
 * `Paradigm.Universe.bootstrap/0` sets up the builtin metamodel self-realization relationship.
-* `Paradigm.Universe.apply_propagate/1` applies the `Paradigm.Transform.Propagate` transform. This looks for places to apply conformance checks or internal transforms.
+* `Paradigm.Universe.apply_propagate/1` applies a propagation transform that looks for places to apply conformance checks or internal transforms.
 
-So all the embedding, conformance checking and transforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
+The result is all the embedding, conformance checking and transforms above are achieved more ergonomically *internal* to a `Universe`-conformant graph:
 
 ```elixir
 Paradigm.Universe.bootstrap()
